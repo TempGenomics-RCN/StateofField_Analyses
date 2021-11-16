@@ -63,14 +63,14 @@ dim(all_dt) #487x40
 ######## Clean newly merged dataset ########
 
 #remove studies that were rejected in "decision" column
-all_dt_accepted <- subset(all_dt, all_dt$Decision == "accept") #359x40 (128 studies from this list that got rejected)
+all_dt_accepted <- all_dt[Decision == "accept", ] #359x40 (128 studies from this list that got rejected)
 
 #remove studies that don't have "accept" in "removal_criteria" column
-all_dt_accepted_final <- subset(all_dt_accepted, all_dt_accepted$Removal_Criteria == "accept") #359 rows, shouldn't really remove any
+all_dt_accepted <- all_dt_accepted[Removal_Criteria == "accept", ] #359 rows, shouldn't really remove any
 
 #TEMP: trim to studies that have data
 #doing this on "system" column bc this should be recorded for every study/record
-all_dt_accepted_wdata <- subset(all_dt_accepted_final, all_dt_accepted_final$system != "") #bc not coded as "NA" but just left blank
+all_dt_accepted <- all_dt_accepted[system != "", ] #bc not coded as "NA" but just left blank
 #dim: 164 rows (out of 359) --> 46% complete
 
 #split time period up into different columns
@@ -78,17 +78,60 @@ all_dt_accepted_wdata <- subset(all_dt_accepted_final, all_dt_accepted_final$sys
 #set dataframe, and in that dataframe quickly add (:=) new columns headed TP_# by splitting year_samp column at ,
 #puts NA where doesn't have a record
 #keeping original year_samp column for now
-dt_wdata_splitTP <- setDT(all_dt_accepted_wdata)[,paste0("TP_", 1:63) := tstrsplit(year_samp, ",")] #had to add 63 columns
+all_dt_accepted <- setDT(all_dt_accepted)[, paste0("TP_", 1:63) := tstrsplit(year_samp, ",")] #had to add 63 columns
 
-#split num samp up into different columns as well
+#split num samp up into different columns
 #should be same # added columns as with year_samp
-dt_wdata_splitTP_splitNS <- setDT(dt_wdata_splitTP)[,paste0("NS_", 1:63) := tstrsplit(num_samp, ",")] #had to add 63 columns
-  dim(dt_wdata_splitTP_splitNS) #164x166 --> 63x2 + 40
+all_dt_accepted <- setDT(all_dt_accepted)[, paste0("NS_", 1:63) := tstrsplit(num_samp, ",")] #had to add 63 columns
+  dim(all_dt_accepted) #164x166 --> 63x2 + 40
+
+#split country samp up into different columns
+#remove white spaces first
+all_dt_accepted$country_samp <- gsub(' ', '', all_dt_accepted$country_samp)
+all_dt_accepted <- setDT(all_dt_accepted)[, paste0("country_", 1:39) := tstrsplit(country_samp, ",")] #had to add 39 columns
 
 #########################################################################################################################################
   
-######## QAxQC ########
+######## QA/QC ########
+
+#### Check taxon names ####
+#get list of taxa
+taxa <- sort(unique(all_dt_accepted$tax_group))
+
+#check rows with mistakes
+check <- all_dt_accepted[tax_group == "Teleostei", ]
+View(check)
   
+#fix taxa names where mis-spelled/misreported
+all_dt_accepted$tax_group[all_dt_accepted$tax_group == "\nMammalia"] <- "Mammalia" #get rid of carriage return character
+all_dt_accepted$tax_group[all_dt_accepted$tax_group == "Acidiacea"] <- "Ascidiacea" #fix typo
+all_dt_accepted$tax_group[all_dt_accepted$tax_group == "Teleostei"] <- "Actinopterygii" #Teleostei is infraclass in Actinopterygii
+
+#check correct
+taxa <- sort(unique(dt_wdata_splitTP_splitNS$tax_group)) #good
+
+#### Check country names ####
+#get list of countries
+countries <- sort(unique(c(all_dt_accepted$country_1, all_dt_accepted$country_2, all_dt_accepted$country_3, 
+                           all_dt_accepted$country_4, all_dt_accepted$country_5, all_dt_accepted$country_6,
+                           all_dt_accepted$country_7, all_dt_accepted$country_8, all_dt_accepted$country_9,
+                           all_dt_accepted$country_10, all_dt_accepted$country_11, all_dt_accepted$country_12,
+                           all_dt_accepted$country_13, all_dt_accepted$country_14, all_dt_accepted$country_15,
+                           all_dt_accepted$country_16, all_dt_accepted$country_17, all_dt_accepted$country_18,
+                           all_dt_accepted$country_19, all_dt_accepted$country_20, all_dt_accepted$country_21,
+                           all_dt_accepted$country_22, all_dt_accepted$country_23, all_dt_accepted$country_24,
+                           all_dt_accepted$country_25, all_dt_accepted$country_26, all_dt_accepted$country_27,
+                           all_dt_accepted$country_28, all_dt_accepted$country_29, all_dt_accepted$country_30,
+                           all_dt_accepted$country_31, all_dt_accepted$country_32, all_dt_accepted$country_33,
+                           all_dt_accepted$country_34, all_dt_accepted$country_35, all_dt_accepted$country_36, 
+                           all_dt_accepted$country_37, all_dt_accepted$country_38, all_dt_accepted$country_39)))
+
+#check rows with mistakes
+check <- which(all_dt_accepted == "BalticSea", arr.ind = TRUE) #checking all columns (aka all country columns simultaneously) and recording indices
+View(check)
+View(all_dt_accepted[18, ]) #row from check (column just informs which country column it is)
+
+
 #Check string length of TP rows --> make sure in proper format
 
 #check taxa sampled list
