@@ -108,7 +108,7 @@ all_dt_accepted$tax_group[all_dt_accepted$tax_group == "Acidiacea"] <- "Ascidiac
 all_dt_accepted$tax_group[all_dt_accepted$tax_group == "Teleostei"] <- "Actinopterygii" #Teleostei is infraclass in Actinopterygii
 
 #check correct
-taxa <- sort(unique(dt_wdata_splitTP_splitNS$tax_group)) #good
+taxa <- sort(unique(all_dt_accepted$tax_group)) #good
 
 #### Check country names ####
 #get list of countries
@@ -127,16 +127,53 @@ countries <- sort(unique(c(all_dt_accepted$country_1, all_dt_accepted$country_2,
                            all_dt_accepted$country_37, all_dt_accepted$country_38, all_dt_accepted$country_39)))
 
 #check rows with mistakes
-check <- which(all_dt_accepted == "BalticSea", arr.ind = TRUE) #checking all columns (aka all country columns simultaneously) and recording indices
+check <- which(all_dt_accepted == "Wales", arr.ind = TRUE) #checking all columns (aka all country columns simultaneously) and recording indices
 View(check)
-View(all_dt_accepted[18, ]) #row from check (column just informs which country column it is)
+View(all_dt_accepted[92, ]) #row from check (column just informs which country column it is)
+
+#fix country names where mis-spelled/incorrect
+all_dt_accepted$country_1[all_dt_accepted$country_1 == "Australia(Tasmania)"] <- "Australia" #should just be Australia for consistency
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Australia(Tasmania)"] <- "Australia"
+all_dt_accepted$country_2[all_dt_accepted$country_2 == "BalticSea"] <- "NA" #should just be Estonia
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Estonia,BalticSea"] <- "Estonia"
+all_dt_accepted$country_38[all_dt_accepted$country_38 == "Caucasus"] <- "NA" #Caucasus not a country (a region)
+  all_dt_accepted$country_23[all_dt_accepted$country_23 == "Macedonia"] <- "NorthMacedonia" #change to proper country name
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Uzbekistan,Iran,China,Japan,Germany,Poland,CzechRepublic,Sweden,Lithuania,Latvia,Austria,Denmark,Finland,Italy,Morocco,Turkey,Croatia,Switzerland,Spain,France,Greece,Hungary,NorthMacedonia,Tunesia,Slovenia,Portugal,Netherlands,,Lebanon,Belgium,Algeria,Syria,Romania,Bulgaria,Ukraine,Russia,Azerbaijan,Caucasus,Georgia"] <- "Uzbekistan,Iran,China,Japan,Germany,Poland,CzechRepublic,Sweden,Lithuania,Latvia,Austria,Denmark,Finland,Italy,Morocco,Turkey,Croatia,Switzerland,Spain,France,Greece,Hungary,Macedonia,Tunesia,Slovenia,Portugal,Netherlands,,Lebanon,Belgium,Algeria,Syria,Romania,Bulgaria,Ukraine,Russia,Azerbaijan,Georgia"
+all_dt_accepted$country_1[all_dt_accepted$country_1 == "China(+USA"] <- "China" #USA should be separate entry
+  all_dt_accepted$country_6[all_dt_accepted$country_6 == "Japan)"] <- "Japan" #fixing end of () as well
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "China(+USA,Russia,Greece,Lithuania,Kazakhstan,Japan)"] <- "China,USA,Russia,Greece,Lithuania,Kazakhstan,Japan"
+all_dt_accepted$country_1[all_dt_accepted$country_1 == "England"] <- "UnitedKingdom" #technical term
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "England,Scotland"] <- "UnitedKingdom"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "England,France,Italy,Portugal,Spain"] <- "UnitedKingdom,France,Italy,Portugal,Spain"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "England,Ireland,Scotland,Wales"] <- "UnitedKingdom,Ireland"
+all_dt_accepted$country_2[all_dt_accepted$country_2 == "FloridaKeys"] <- "NA" #NA since country_1 will change to USA
+  all_dt_accepted$country_1[all_dt_accepted$country_1 == "MainlandFlorida"] <- "USA" #should just be USA
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "MainlandFlorida,FloridaKeys,Cuba"] <- "USA,Cuba"
+all_dt_accepted$country_4[all_dt_accepted$country_4 == "INdia"] <- "India" #fix typo
+  all_dt_accepted$country_5[all_dt_accepted$country_5 == "INdonesia"] <- "Indonesia" #fix typo
+  all_dt_accepted$country_7[all_dt_accepted$country_7 == "Laous"] <- "Laos" #fix typo
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Bangladesh,Cambodia,China,INdia,INdonesia,Iraq,Laous,Malaysia,Myanmar,Nepal,Pakistan,Thailand,Vietnam"] <- "Bangladesh,Cambodia,China,India,Indonesia,Iraq,Laos,Malaysia,Myanmar,Nepal,Pakistan,Thailand,Vietnam"
+all_dt_accepted$country_1[all_dt_accepted$country_1 == "Scotland"] <- "UnitedKingdom" #technical term
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Scotland"] <- "UnitedKingdom"
+  all_dt_accepted$country_2[all_dt_accepted$country_2 == "Scotland"] <- "NA" #here should be NA bc England changed to UK
+  all_dt_accepted$country_3[all_dt_accepted$country_3 == "Scotland"] <- "NA" #here should be NA bc England changed to UK
+all_dt_accepted$country_1[all_dt_accepted$country_1 == "UnitedStates"] <- "USA" #bc USA more common term
+  all_dt_accepted$country_2[all_dt_accepted$country_2 == "UnitedStates"] <- "USA"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedStates"] <- "USA"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Canada,UnitedStates"] <- "Canada,USA"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedStates,Ukraine"] <- "USA,Ukraine"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedStates,Switzerland"] <- "USA,Switzerland"
+all_dt_accepted$country_4[all_dt_accepted$country_4 == "Wales"] <- "NA" #change to NA bc England changed to UK
+
+#check to make sure all studies have year_samp
+noyear_check <- all_dt_accepted[year_samp == ""] #5 rows without year_sampled
 
 
 #Check string length of TP rows --> make sure in proper format
 
-#check taxa sampled list
-#check country sample list
+
 #check gen time list (and character type)
 #check study design, etc list
 
 #look for rows where data is missing --> esp TP & NS
+#make sure recorder & first subject match
