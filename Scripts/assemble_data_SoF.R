@@ -93,6 +93,18 @@ all_dt_accepted <- setDT(all_dt_accepted)[, paste0("country_", 1:39) := tstrspli
 #########################################################################################################################################
   
 ######## QA/QC ########
+#make sure recorder & first subject match
+
+#### Check publication metadata ####
+#check for studies without publication year
+nopub_check <- all_dt_accepted[Publication_Year == ""] #all have pub year
+
+#### Check system ####
+#check for studies without system recorded
+nosystem_check <- all_dt_accepted[system == ""] #all have system recorded
+
+#get list of systems
+systems <- sort(unique(all_dt_accepted$system)) #only 4 options --> good
 
 #### Check taxon names ####
 #get list of taxa
@@ -165,15 +177,133 @@ all_dt_accepted$country_1[all_dt_accepted$country_1 == "UnitedStates"] <- "USA" 
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedStates,Switzerland"] <- "USA,Switzerland"
 all_dt_accepted$country_4[all_dt_accepted$country_4 == "Wales"] <- "NA" #change to NA bc England changed to UK
 
+#### Check year_samp & num_samp ####
 #check to make sure all studies have year_samp
-noyear_check <- all_dt_accepted[year_samp == ""] #5 rows without year_sampled
+noyear_check <- all_dt_accepted[year_samp == ""] #5 rows without year_samp
 
+#check to make sure all studies have num_samp
+nonum_check <- all_dt_accepted[num_samp == ""] #10 rows without num_samp
 
-#Check string length of TP rows --> make sure in proper format
+#### Check gen length ####
+#check for studies without gen_time
+nogen_check <- all_dt_accepted[gen_time == ""] #10 rows without gen_time
 
+#get list of generation times
+gen <- sort(unique(all_dt_accepted$gen_time))
 
-#check gen time list (and character type)
-#check study design, etc list
+#check rows with extra info
+check <- all_dt_accepted[gen_time == "XX", ]
+View(check)
 
-#look for rows where data is missing --> esp TP & NS
-#make sure recorder & first subject match
+#fix gen time when necessary
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1095-1825"] <- 1460 #Taking average
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1095-2920 (DOI: 10.2960/J.v25.a10)"] <- 2737.5 #Atlantic cod -- gen time is 7.5 yrs according to FishBase
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1095-3650"] <- 730 #Myotis lucifugus, gen time is 2 yrs (DOI:10.1093/jhered/esu012)
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1095 - 6205"] <- 3102.5 #average of 7-10 years, from Jacoby & Gollock (2014)
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1135 (FishBase)"] <- 1153 #removed citation
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "12 (DOI: 10.1051/apido:2005016)"] <- 12 #removed citation
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "21 (see paper)"] <- 21 #removed citation
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "243-365 (fishbase)"] <- 304 #took average and removed citation
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "3215 - 4854.5"] <- 4034.5 #took average
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "36.5-182"] <- 109.25 #took average
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "39-148"] <- 93.5 #took average
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "520 (Smith et al. 1996)"] <- 520 #removed citation
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "730 (Bauman and Metter, 1977)"] <- 730 #removed citation
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "XX"] <- 3285 #European hake, from fishbase
+
+#check correct
+gen <- sort(unique(all_dt_accepted$gen_time)) #good
+
+#### Check study design ####
+#check for studies without study design
+nosd_check <- all_dt_accepted[study_design == ""] #3 rows without study design
+
+#get list of study design
+st_design <- sort(unique(all_dt_accepted$study_design)) #only 2 options, good
+
+#### Check type change ####
+#check for studies without type change
+notc_check <- all_dt_accepted[type_change == ""] #5 rows without type change
+
+#get list of type change
+type <- sort(unique(all_dt_accepted$type_change)) #4 options
+
+#check rows with extra info
+check <- all_dt_accepted[type_change == "natural, anthropogenic", ]
+View(check)
+
+#marking "natural, anthropogenic" and "anthorpogenic, natural" as both for now
+#only in diversity spreadsheet so perhaps not applied across the sheets?
+all_dt_accepted$type_change[all_dt_accepted$type_change == "anthorpogenic, natural"] <- "both" #changing to both for now
+all_dt_accepted$type_change[all_dt_accepted$type_change == "natural, anthropogenic"] <- "both" #changing to both for now
+
+#### Check driver of process ####
+#check for studies without driver process (only in first column)
+nodp_check <- all_dt_accepted[driver_process1 == ""] #16 rows without driver_process
+
+#get list of driver_process
+drive_process <- sort(unique(c(all_dt_accepted$driver_process1, all_dt_accepted$driver_process2, all_dt_accepted$driver_process3))) #9 options, good
+                           
+#### Check length of process ####
+#check for studies without length process
+nolp_check <- all_dt_accepted[length_process == ""] #18 rows without length_process
+
+#get list of length_process
+length_process <- sort(unique(all_dt_accepted$length_process)) #2 options, good
+
+#### Check data type ####
+#check for studies without data type
+nodt_check <- all_dt_accepted[data_type == ""] #6 rows without data_type
+
+#get list of data_type
+data_type <- sort(unique(all_dt_accepted$data_type)) #6 options
+
+#changing STR rows to microsats
+all_dt_accepted$data_type[all_dt_accepted$data_type == "STR"] <- "microsat" #same thing
+
+#### Check tissue type ####
+#check for studies without tissue type
+nott_check <- all_dt_accepted[tissue_type == ""] #25 rows without tissue type
+
+#get list of tissue_type
+tissue_type <- sort(unique(all_dt_accepted$tissue_type)) #32 options which is fine
+#will need to separate this column out & perhaps condense later but good enough now
+
+#### Check preservation method ####
+#check for studies without preservation method
+nopm_check <- all_dt_accepted[preserv_method == ""] #45 rows without preservation method
+
+#get list of preserv_method
+preserv_method <- sort(unique(all_dt_accepted$preserv_method)) #9 options, good
+#will need to separate this column out later but good enough for now
+
+#### Check extraction method ####
+#check for studies without extraction method
+noem_check <- all_dt_accepted[extract_method == ""] #17 rows without extraction method
+
+#get list of extract_method
+extract_method <- sort(unique(all_dt_accepted$extract_method)) #76 options
+#definitely needs to be condensed, will work on later
+
+#### Check sequence platform ####
+#check for  studies without sequence platform
+nosp_check <- all_dt_accepted[seq_platform == ""] #28 rows without sequence platform
+
+#get list of seq_platform
+seq_platform <- sort(unique(all_dt_accepted$seq_platform)) #28 options
+#definitely needs to be condensed, will work on later
+
+#### Check library prep method ####
+#check for studies without lib prep
+nolp_check <- all_dt_accepted[lib_prep_method == ""] #16 rows without lib prep
+
+#get list of lib_prep
+lib_prep <- sort(unique(all_dt_accepted$lib_prep_method)) #8 options --> too many
+
+#check rows with extra info
+check <- all_dt_accepted[lib_prep_method == "RAPTURE", ]
+View(check)
+
+#fix lib prep when necessary
+all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "Meyer & Kircher 2010"] <- "Targeted_sequence_capture" #Meyer & Kircher 2010 is targeted sequence capture (exon)
+all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "RAPTURE"] <- "Targeted_sequence_capture" #RAPTURE == targeted sequence capture (of RAD sites)
