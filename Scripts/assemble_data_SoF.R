@@ -335,3 +335,10 @@ View(check)
 #fix lib prep when necessary
 all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "Meyer & Kircher 2010"] <- "Targeted_sequence_capture" #Meyer & Kircher 2010 is targeted sequence capture (exon)
 all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "RAPTURE"] <- "Targeted_sequence_capture" #RAPTURE == targeted sequence capture (of RAD sites)
+
+#########################################################################################################################################
+
+######## Format and write out ########
+
+#write out cleaned & aggregated temp gen data
+write.csv(all_dt_accepted, file = "Output/all_tempgen_data.csv")
