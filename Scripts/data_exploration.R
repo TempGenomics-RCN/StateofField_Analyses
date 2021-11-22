@@ -29,8 +29,8 @@ subject1_by_year <- all_data[, .N, by = .(subject_1, Publication_Year)]
 
 #plot subject_by_year
 sub_by_year_plot <- ggplot(data = subject1_by_year, aes(x = Publication_Year, y = N, group = subject_1)) + 
-  geom_line(aes(color = subject_1, size = 2)) + 
-  geom_point(aes(color = subject_1, size = 2)) + 
+  geom_line(aes(color = subject_1), size = 2) + 
+  geom_point(aes(color = subject_1), size = 2) + 
   theme_minimal()
 sub_by_year_plot
 
@@ -57,3 +57,37 @@ t_by_s_plot <- ggplot(data = tax_by_subject1, aes(x = subject_1, y = N, fill = t
   geom_bar(stat = "identity", color = "black") + 
   theme_minimal()
 t_by_s_plot
+
+
+#### study design trends ####
+
+#study_design by subject
+sd_by_subject <- all_data[, .N, by = .(subject_1, study_design)]
+sd_by_subject <- sd_by_subject[study_design == "", study_design := NA] #change rows with blank data_type to NA
+
+sd_by_subject_plot <- ggplot(data = na.omit(sd_by_subject), aes(x = subject_1, y = N, fill = study_design)) + 
+  geom_bar(stat = "identity", color = "black") + 
+  theme_minimal()
+sd_by_subject_plot
+
+#study_design by year
+sd_by_year <- all_data[, .N, by = .(study_design, Publication_Year)]
+sd_by_year <- sd_by_year[study_design == "", study_design := NA] #change rows with blank data_type to NA
+
+#plot sd_by_year
+sd_by_year_plot <- ggplot(data = na.omit(sd_by_year), aes(x = Publication_Year, y = N, group = study_design)) + 
+  geom_line(aes(color = study_design), size = 2) + 
+  geom_point(aes(color = study_design), size = 2) + 
+  theme_minimal()
+sd_by_year_plot
+
+#### marker type trends ####
+marker_by_year <- all_data[, .N, by = .(data_type, Publication_Year)]
+marker_by_year <- marker_by_year[data_type == "", data_type := NA] #change rows with blank data_type to NA
+
+#plot marker_by_year
+marker_by_year_plot <- ggplot(data = na.omit(marker_by_year), aes(x = Publication_Year, y = N, group = data_type)) + 
+  geom_line(aes(color = data_type), size = 2) + 
+  geom_point(aes(color = data_type), size = 2) + 
+  theme_minimal()
+marker_by_year_plot
