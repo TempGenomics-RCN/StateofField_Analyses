@@ -177,7 +177,10 @@ all_dt_accepted$country_1[all_dt_accepted$country_1 == "UnitedStates"] <- "USA" 
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedStates,Switzerland"] <- "USA,Switzerland"
 all_dt_accepted$country_4[all_dt_accepted$country_4 == "Wales"] <- "NA" #change to NA bc England changed to UK
 
-#### Check year_samp & num_samp ####
+#### Check loc_samp, year_samp & num_samp ####
+#check to make sure all studies have loc_samp
+noloc_check <- all_dt_accepted[loc_samp == ""] #5 rows without loc_samp
+
 #check to make sure all studies have year_samp
 noyear_check <- all_dt_accepted[year_samp == ""] #5 rows without year_samp
 
@@ -293,6 +296,31 @@ nosp_check <- all_dt_accepted[seq_platform == ""] #28 rows without sequence plat
 seq_platform <- sort(unique(all_dt_accepted$seq_platform)) #28 options
 #definitely needs to be condensed, will work on later
 
+#check rows with extra info
+check <- all_dt_accepted[seq_platform == "SNaPshot Multiplex SNP assay", ]
+View(check)
+
+#fix seq platform as necessary
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "ABI 3130 automated sequencer"] <- "Sanger" #ABI 3130 is a 16-capillary electrophoresis sequencer (aka Sanger)
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "ABI 3730 capillary sequencer.BEckman CEQ2000XL"] <- "Sanger" #ABI 3730 is a 96-capillary electrophoresis sequencer (aka Sanger)
+  all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Applied Biosystems 3730xl DNA Analyzer"] <- "Sanger"
+  all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "ABI 3730 DNA automated sequencer"] <- "Sanger"
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "BioMark HD System)"] <- "Fluidigm BioMark HD" #per paper -- (Fluidigm Biomark 96.96 Dynamic Array) often used for single-cell genotyping/gene expression
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "First BASE"] <- "Sanger" #First BASE is sequencing facility in Malaysia that uses ABI sequencers (aka Sanger)
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Fluid Biomark HD System"] <- "Fluidigm BioMark HD"
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Fluidigm EP1 instrumentation"] <- "Fluidigm EP1" #different than BioMark HD but still commonly for gene expression
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Hitachi SQ-5500"] <- "Sanger" #slab gel electrophoresis (more labor-intensive than capillary but still essentially Sanger)
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Illumina-BeadXPress SNP assay"] <- "Illumina_BeadXpress" #format to match notation of other Illumina platforms
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Illumina GoldenGate"] <- "Illumina_BeadXpress" #per paper, done at Roslin Institute (think mostGolden Gate assays there are with Illumina BeadXpress, not iScan...)
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Ion Protontm"] <- "Ion_Torrent" #typo & also Ion Proton is one of Ion Torrent's sequencers (other one is PGM)
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Li-Cor 4200 Global IR2"] <- "Sanger" #type of chain-termination & gel electrophoresis platform (Sanger)
+  all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "LI-COR IR2 two-dye"] <- "Sanger"
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "MegaBACE1000"] <- "Sanger" #automated DNA capillary sequencer
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "MJ Basestation Genetic Analyzer"] <- "Sanger" #automated DNA capillary sequencer
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Pharmacia ALFexpresss automatic sequencer"] <- "Sanger" #type of gel electorphoresis sequencer
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "SEQ 8000 Automatic DNA Analyser"] <- "Sanger" #automated DNA capillary sequencer
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "SNaPshot Multiplex SNP assay"] <- "Sanger" #SNP assay but designed to be run on any ABI (capillary/Sanger sequencer) system, which would be the sequencing platform
+ 
 #### Check library prep method ####
 #check for studies without lib prep
 nolp_check <- all_dt_accepted[lib_prep_method == ""] #16 rows without lib prep
