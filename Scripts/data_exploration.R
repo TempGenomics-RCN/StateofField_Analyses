@@ -39,7 +39,7 @@ system_by_subject1 <- all_data[, .N, by = .(subject_1, system)]
 
 #plot system_by_subject1
 s_by_s_plot <- ggplot(data = system_by_subject1, aes(x = subject_1, y = N, fill = system)) + 
-  geom_bar(stat = "identity", color = "black") + 
+  geom_bar(position = "fill", stat = "identity", color = "black") + 
   theme_minimal()
 s_by_s_plot
 
@@ -54,7 +54,7 @@ tax_plot
 tax_by_subject1 <- all_data[, .N, by = .(subject_1, tax_group)]
 
 t_by_s_plot <- ggplot(data = tax_by_subject1, aes(x = subject_1, y = N, fill = tax_group)) + 
-  geom_bar(stat = "identity", color = "black") + 
+  geom_bar(position = "fill", stat = "identity", color = "black") + 
   theme_minimal()
 t_by_s_plot
 
@@ -66,7 +66,7 @@ sd_by_subject <- all_data[, .N, by = .(subject_1, study_design)]
 sd_by_subject <- sd_by_subject[study_design == "", study_design := NA] #change rows with blank data_type to NA
 
 sd_by_subject_plot <- ggplot(data = na.omit(sd_by_subject), aes(x = subject_1, y = N, fill = study_design)) + 
-  geom_bar(stat = "identity", color = "black") + 
+  geom_bar(position = "fill", stat = "identity", color = "black") + 
   theme_minimal()
 sd_by_subject_plot
 
@@ -82,6 +82,17 @@ sd_by_year_plot <- ggplot(data = na.omit(sd_by_year), aes(x = Publication_Year, 
 sd_by_year_plot
 
 #### marker type trends ####
+
+#marker by subject
+marker_by_subject <- all_data[, .N, by = .(subject_1, data_type)]
+marker_by_subject <- marker_by_subject[data_type == "", data_type := NA] #change rows with blank data_type to NA
+
+marker_by_subject_plot <- ggplot(data = na.omit(marker_by_subject), aes(x = subject_1, y = N, fill = data_type)) + 
+  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  theme_minimal()
+marker_by_subject_plot #change position to fill to get stacked percentages --- otherwise make it "stack"
+
+#marker by year
 marker_by_year <- all_data[, .N, by = .(data_type, Publication_Year)]
 marker_by_year <- marker_by_year[data_type == "", data_type := NA] #change rows with blank data_type to NA
 
@@ -91,3 +102,16 @@ marker_by_year_plot <- ggplot(data = na.omit(marker_by_year), aes(x = Publicatio
   geom_point(aes(color = data_type), size = 2) + 
   theme_minimal()
 marker_by_year_plot
+
+#### generation time trends ####
+all_data$gen_time <- as.numeric(all_data$gen_time)
+
+gt_by_tax_plot <- ggplot(data = all_data, aes(x = tax_group, y = gen_time, color = tax_group)) + 
+  geom_boxplot() + 
+  theme_minimal()
+gt_by_tax_plot
+
+gt_by_subject_plot <- ggplot(data = all_data, aes(x = subject_1, y = gen_time, color = subject_1)) + 
+  geom_boxplot() + 
+  theme_minimal()
+gt_by_subject_plot
