@@ -223,6 +223,12 @@ setnames(num_drivers3, new = c("driver_process", "N"))
 
 num_drivers_merge <- merge(num_drivers1, num_drivers2, num_drivers3, by = "driver_process")
 
+#plot driver distribution
+driver_plot <- ggplot(data = na.omit(all_data_wide[, .N, by = .(driver_process1)]), aes(x = reorder(driver_process1, -N), y = N, fill = driver_process1)) + 
+  geom_bar(stat = "identity", color = "black") + 
+  theme_minimal()
+driver_plot
+
 driver_by_subject <- all_data_wide[, .N, by = .(subject_1, driver_process1)]
 driver_by_subject <- driver_by_subject[driver_process1 == "", driver_process1 := NA] #change rows with blank data_type to NA
 
@@ -258,6 +264,13 @@ driver_by_system_plot <- ggplot(data = na.omit(driver_by_system), aes(x = system
   theme_minimal()
 driver_by_system_plot #change position to fill to get stacked percentages --- otherwise make it "stack"
 
+driver_by_taxa <- all_data_wide[, .N, by = .(tax_group, driver_process1)]
+driver_by_taxa <- driver_by_taxa[driver_process1 == "", driver_process1 := NA] #change rows with blank data_type to NA
+
+driver_by_taxa_plot <- ggplot(data = na.omit(driver_by_taxa), aes(x = tax_group, y = N, fill = driver_process1)) + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
+  theme_minimal()
+driver_by_taxa_plot #change position to fill to get stacked percentages --- otherwise make it "stack"
 
 
 #### TO DO
