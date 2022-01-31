@@ -46,7 +46,6 @@ popsize_dup <- subset(popsize_dt, popsize_dt$Article_Title == "Range-wide fragme
 #dup study in connectivity & diversity --> looks like was filtered in diversity so removing from connectivity
 connectivity_dt <- subset(connectivity_dt, connectivity_dt$Article_Title != "Range-wide fragmentation in a threatened fish associated with post-European settlement modification in the Murray-Darling Basin, Australia")
 
-
 ######## Merge datasets ########
 
 #verify all column names match
@@ -56,22 +55,22 @@ all(names(adaptation_dt) == names(popsize_dt))
 
 #merge datasets together
 all_dt <- rbind(adaptation_dt, connectivity_dt, diversity_dt, popsize_dt)
-dim(all_dt) #487x40
+dim(all_dt) #501x40
 
 ##########################################################################################################################################
 
 ######## Clean newly merged dataset ########
 
 #remove studies that were rejected in "decision" column
-all_dt_accepted <- all_dt[Decision == "accept", ] #359x40 (128 studies from this list that got rejected)
+all_dt_accepted <- all_dt[Decision == "accept", ] #330x40 (171 studies from this list that got rejected)
 
 #remove studies that don't have "accept" in "removal_criteria" column
-all_dt_accepted <- all_dt_accepted[Removal_Criteria == "accept", ] #359 rows, shouldn't really remove any
+all_dt_accepted <- all_dt_accepted[Removal_Criteria == "accept", ] #330 rows, shouldn't really remove any
 
 #TEMP: trim to studies that have data
 #doing this on "system" column bc this should be recorded for every study/record
 all_dt_accepted <- all_dt_accepted[system != "", ] #bc not coded as "NA" but just left blank
-#dim: 164 rows (out of 359) --> 46% complete
+#dim: 230 rows (out of 330) --> 70% complete
 
 #split time period up into different columns
 #data.table version (much like separate() from tidyverse)
@@ -83,7 +82,7 @@ all_dt_accepted <- setDT(all_dt_accepted)[, paste0("TP_", 1:63) := tstrsplit(yea
 #split num samp up into different columns
 #should be same # added columns as with year_samp
 all_dt_accepted <- setDT(all_dt_accepted)[, paste0("NS_", 1:63) := tstrsplit(num_samp, ",")] #had to add 63 columns
-  dim(all_dt_accepted) #164x166 --> 63x2 + 40
+  dim(all_dt_accepted) #230x166 --> 63x2 + 40
 
 #split country samp up into different columns
 #remove white spaces first
@@ -139,57 +138,89 @@ countries <- sort(unique(c(all_dt_accepted$country_1, all_dt_accepted$country_2,
                            all_dt_accepted$country_37, all_dt_accepted$country_38, all_dt_accepted$country_39)))
 
 #check rows with mistakes
-check <- which(all_dt_accepted == "Wales", arr.ind = TRUE) #checking all columns (aka all country columns simultaneously) and recording indices
+check <- which(all_dt_accepted == "California", arr.ind = TRUE) #checking all columns (aka all country columns simultaneously) and recording indices
 View(check)
-View(all_dt_accepted[92, ]) #row from check (column just informs which country column it is)
+View(all_dt_accepted[74, ]) #row from check (column just informs which country column it is)
 
 #fix country names where mis-spelled/incorrect
 all_dt_accepted$country_1[all_dt_accepted$country_1 == "Australia(Tasmania)"] <- "Australia" #should just be Australia for consistency
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Australia(Tasmania)"] <- "Australia"
 all_dt_accepted$country_2[all_dt_accepted$country_2 == "BalticSea"] <- "NA" #should just be Estonia
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Estonia,BalticSea"] <- "Estonia"
+all_dt_accepted$country_samp[all_dt_accepted$country_samp == "California"] <- "USA" #should be USA
+  all_dt_accepted$country_1[all_dt_accepted$country_1 == "California"] <- "USA"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "SouthAfrica,SouthAfrica,SouthAfrica,SouthAfrica,NewZealand,Taiwan,Taiwan,Taiwan,California,California,Ecuador,Ecuador"] <- "SouthAfrica,SouthAfrica,SouthAfrica,SouthAfrica,NewZealand,Taiwan,Taiwan,Taiwan,USA,USA,Ecuador,Ecuador" #ignoring repeats for now
+  all_dt_accepted$country_9[all_dt_accepted$country_9 == "California"] <- "USA"
+  all_dt_accepted$country_10[all_dt_accepted$country_10 == "California"] <- "USA"
 all_dt_accepted$country_38[all_dt_accepted$country_38 == "Caucasus"] <- "NA" #Caucasus not a country (a region)
   all_dt_accepted$country_23[all_dt_accepted$country_23 == "Macedonia"] <- "NorthMacedonia" #change to proper country name
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Uzbekistan,Iran,China,Japan,Germany,Poland,CzechRepublic,Sweden,Lithuania,Latvia,Austria,Denmark,Finland,Italy,Morocco,Turkey,Croatia,Switzerland,Spain,France,Greece,Hungary,NorthMacedonia,Tunesia,Slovenia,Portugal,Netherlands,,Lebanon,Belgium,Algeria,Syria,Romania,Bulgaria,Ukraine,Russia,Azerbaijan,Caucasus,Georgia"] <- "Uzbekistan,Iran,China,Japan,Germany,Poland,CzechRepublic,Sweden,Lithuania,Latvia,Austria,Denmark,Finland,Italy,Morocco,Turkey,Croatia,Switzerland,Spain,France,Greece,Hungary,Macedonia,Tunesia,Slovenia,Portugal,Netherlands,,Lebanon,Belgium,Algeria,Syria,Romania,Bulgaria,Ukraine,Russia,Azerbaijan,Georgia"
 all_dt_accepted$country_1[all_dt_accepted$country_1 == "China(+USA"] <- "China" #USA should be separate entry
   all_dt_accepted$country_6[all_dt_accepted$country_6 == "Japan)"] <- "Japan" #fixing end of () as well
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "China(+USA,Russia,Greece,Lithuania,Kazakhstan,Japan)"] <- "China,USA,Russia,Greece,Lithuania,Kazakhstan,Japan"
-all_dt_accepted$country_1[all_dt_accepted$country_1 == "England"] <- "UnitedKingdom" #technical term
-  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "England,Scotland"] <- "UnitedKingdom"
-  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "England,France,Italy,Portugal,Spain"] <- "UnitedKingdom,France,Italy,Portugal,Spain"
-  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "England,Ireland,Scotland,Wales"] <- "UnitedKingdom,Ireland"
+all_dt_accepted$country_1[all_dt_accepted$country_1 == "England"] <- "UK" #technical term
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "England,Scotland"] <- "UK"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "England,France,Italy,Portugal,Spain"] <- "UK,France,Italy,Portugal,Spain"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "England,Ireland,Scotland,Wales"] <- "UK,Ireland"
+all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Europe(multiplecountries,namesnotgiven)"] <- "Finland,Sweden,Denmark,UK,Netherlands,France,Norway" #got from lat/lon coordinates in paper
+  all_dt_accepted$country_1[all_dt_accepted$country_1 == "Europe(multiplecountries"] <- "Finland"
+  all_dt_accepted$country_2[all_dt_accepted$country_2 == "namesnotgiven)"] <- "Sweden"
+  all_dt_accepted$country_3[all_dt_accepted$Article_Number == 3449] <- "Denmark"
+  all_dt_accepted$country_4[all_dt_accepted$Article_Number == 3449] <- "UK"
+  all_dt_accepted$country_5[all_dt_accepted$Article_Number == 3449] <- "Netherlands"
+  all_dt_accepted$country_6[all_dt_accepted$Article_Number == 3449] <- "France"
+  all_dt_accepted$country_7[all_dt_accepted$Article_Number == 3449] <- "Norway"
 all_dt_accepted$country_2[all_dt_accepted$country_2 == "FloridaKeys"] <- "NA" #NA since country_1 will change to USA
   all_dt_accepted$country_1[all_dt_accepted$country_1 == "MainlandFlorida"] <- "USA" #should just be USA
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "MainlandFlorida,FloridaKeys,Cuba"] <- "USA,Cuba"
+all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Galapagos"] <- "Ecuador"
+  all_dt_accepted$country_1[all_dt_accepted$country_1 == "Galapagos"] <- "Ecuador"
+all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Hawaii"] <- "USA"
+  all_dt_accepted$country_1[all_dt_accepted$country_1 == "Hawaii"] <- "USA"
 all_dt_accepted$country_4[all_dt_accepted$country_4 == "INdia"] <- "India" #fix typo
   all_dt_accepted$country_5[all_dt_accepted$country_5 == "INdonesia"] <- "Indonesia" #fix typo
   all_dt_accepted$country_7[all_dt_accepted$country_7 == "Laous"] <- "Laos" #fix typo
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Bangladesh,Cambodia,China,INdia,INdonesia,Iraq,Laous,Malaysia,Myanmar,Nepal,Pakistan,Thailand,Vietnam"] <- "Bangladesh,Cambodia,China,India,Indonesia,Iraq,Laos,Malaysia,Myanmar,Nepal,Pakistan,Thailand,Vietnam"
+all_dt_accepted$country_samp[all_dt_accepted$country_samp == "MarianaIslands"] <- "USA"
+  all_dt_accepted$country_1[all_dt_accepted$country_1 == "MarianaIslands"] <- "USA"
+all_dt_accepted$country_3[all_dt_accepted$country_3 == "NetherlandsAntilles"] <- "Netherlands"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "USA,Mexico,NetherlandsAntilles,VirginIslands"] <- "USA,Mexico,Netherlands" #VirginIslands are US territory (where sampled here)
 all_dt_accepted$country_1[all_dt_accepted$country_1 == "Scotland"] <- "UnitedKingdom" #technical term
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Scotland"] <- "UnitedKingdom"
   all_dt_accepted$country_2[all_dt_accepted$country_2 == "Scotland"] <- "NA" #here should be NA bc England changed to UK
   all_dt_accepted$country_3[all_dt_accepted$country_3 == "Scotland"] <- "NA" #here should be NA bc England changed to UK
+all_dt_accepted$country_samp[all_dt_accepted$country_samp == "SouthCarolina"] <- "USA"
+  all_dt_accepted$country_1[all_dt_accepted$country_1 == "SouthCarolina"] <- "USA"
+all_dt_accepted$country_24[all_dt_accepted$country_24 == "Tunesia"] <- "Tunisia" #fix typo
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Uzbekistan,Iran,China,Japan,Germany,Poland,CzechRepublic,Sweden,Lithuania,Latvia,Austria,Denmark,Finland,Italy,Morocco,Turkey,Croatia,Switzerland,Spain,France,Greece,Hungary,Macedonia,Tunesia,Slovenia,Portugal,Netherlands,,Lebanon,Belgium,Algeria,Syria,Romania,Bulgaria,Ukraine,Russia,Azerbaijan,Caucasus,Georgia"] <- "Uzbekistan,Iran,China,Japan,Germany,Poland,CzechRepublic,Sweden,Lithuania,Latvia,Austria,Denmark,Finland,Italy,Morocco,Turkey,Croatia,Switzerland,Spain,France,Greece,Hungary,Macedonia,Tunisia,Slovenia,Portugal,Netherlands,Lebanon,Belgium,Algeria,Syria,Romania,Bulgaria,Ukraine,Russia,Azerbaijan,Caucasus,Georgia"
+all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedKingdom"] <- "UK" #bc UK more common term
+  all_dt_accepted$country_1[all_dt_accepted$country_1 == "UnitedKingdom"] <- "UK"
 all_dt_accepted$country_1[all_dt_accepted$country_1 == "UnitedStates"] <- "USA" #bc USA more common term
   all_dt_accepted$country_2[all_dt_accepted$country_2 == "UnitedStates"] <- "USA"
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedStates"] <- "USA"
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Canada,UnitedStates"] <- "Canada,USA"
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedStates,Ukraine"] <- "USA,Ukraine"
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedStates,Switzerland"] <- "USA,Switzerland"
+all_dt_accepted$country_4[all_dt_accepted$country_4 == "VirginIslands"] <- "NA" #change to NA bc USA already accounted for
 all_dt_accepted$country_4[all_dt_accepted$country_4 == "Wales"] <- "NA" #change to NA bc England changed to UK
+
+#check rows with data missing --> at this point shouldn't be missing, everything should be marked as "NA" if data pulled and checked
+check <- all_dt_accepted[country_samp == ""] #checking all columns (aka all country columns simultaneously) and recording indices
+check <- all_dt_accepted[country_samp == "NA"] #see if there are any that people couldn't find --> none, good
 
 #### Check loc_samp, year_samp & num_samp ####
 #check to make sure all studies have loc_samp
-noloc_check <- all_dt_accepted[loc_samp == ""] #5 rows without loc_samp
+noloc_check <- all_dt_accepted[loc_samp == ""] #12 rows without loc_samp
 
 #check to make sure all studies have year_samp
-noyear_check <- all_dt_accepted[year_samp == ""] #5 rows without year_samp
+noyear_check <- all_dt_accepted[year_samp == ""] #14 rows without year_samp
 
 #check to make sure all studies have num_samp
-nonum_check <- all_dt_accepted[num_samp == ""] #10 rows without num_samp
+nonum_check <- all_dt_accepted[num_samp == ""] #15 rows without num_samp
 
 #### Check gen length ####
 #check for studies without gen_time
-nogen_check <- all_dt_accepted[gen_time == ""] #10 rows without gen_time
+nogen_check <- all_dt_accepted[gen_time == ""] #7 rows without gen_time
 
 #get list of generation times
 gen <- sort(unique(all_dt_accepted$gen_time))
