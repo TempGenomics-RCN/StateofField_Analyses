@@ -226,7 +226,7 @@ nogen_check <- all_dt_accepted[gen_time == ""] #7 rows without gen_time
 gen <- sort(unique(all_dt_accepted$gen_time))
 
 #check rows with extra info
-check <- all_dt_accepted[gen_time == "XX", ]
+check <- all_dt_accepted[gen_time == "730-1825", ]
 View(check)
 
 #fix gen time when necessary
@@ -238,26 +238,31 @@ all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1135 (FishBase)"] <- 1153 
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "12 (DOI: 10.1051/apido:2005016)"] <- 12 #removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "21 (see paper)"] <- 21 #removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "243-365 (fishbase)"] <- 304 #took average and removed citation
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "2739 (FishBase)"] <- 2739 #removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "3215 - 4854.5"] <- 4034.5 #took average
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "36.5-182"] <- 109.25 #took average
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "39-148"] <- 93.5 #took average
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "520 (Smith et al. 1996)"] <- 520 #removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "730 (Bauman and Metter, 1977)"] <- 730 #removed citation
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "730-1825"] <- 730 #took average
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "XX"] <- 3285 #European hake, from fishbase
 
 #check correct
 gen <- sort(unique(all_dt_accepted$gen_time)) #good
 
+#check NAs (later)
+na_gen <- which(is.na(all_dt_accepted$gen_time)) #14 rows where NA
+
 #### Check study design ####
 #check for studies without study design
-nosd_check <- all_dt_accepted[study_design == ""] #3 rows without study design
+nosd_check <- all_dt_accepted[study_design == ""] #2 rows without study design
 
 #get list of study design
 st_design <- sort(unique(all_dt_accepted$study_design)) #only 2 options, good
 
 #### Check type change ####
 #check for studies without type change
-notc_check <- all_dt_accepted[type_change == ""] #5 rows without type change
+notc_check <- all_dt_accepted[type_change == ""] #4 rows without type change
 
 #get list of type change
 type <- sort(unique(all_dt_accepted$type_change)) #4 options
@@ -273,59 +278,58 @@ all_dt_accepted$type_change[all_dt_accepted$type_change == "natural, anthropogen
 
 #### Check driver of process ####
 #check for studies without driver process (only in first column)
-nodp_check <- all_dt_accepted[driver_process1 == ""] #16 rows without driver_process
+nodp_check <- all_dt_accepted[driver_process1 == ""] #33 rows without driver_process
 
 #get list of driver_process
 drive_process <- sort(unique(c(all_dt_accepted$driver_process1, all_dt_accepted$driver_process2, all_dt_accepted$driver_process3))) #9 options, good
                            
 #### Check length of process ####
 #check for studies without length process
-nolp_check <- all_dt_accepted[length_process == ""] #18 rows without length_process
+nolp_check <- all_dt_accepted[length_process == ""] #22 rows without length_process
 
 #get list of length_process
 length_process <- sort(unique(all_dt_accepted$length_process)) #2 options, good
 
 #### Check data type ####
 #check for studies without data type
-nodt_check <- all_dt_accepted[data_type == ""] #6 rows without data_type
+nodt_check <- all_dt_accepted[data_type == ""] #1 rows without data_type
 
 #get list of data_type
-data_type <- sort(unique(all_dt_accepted$data_type)) #6 options
+data_type <- sort(unique(all_dt_accepted$data_type)) #8 options
 
 #changing STR rows to microsats
 all_dt_accepted$data_type[all_dt_accepted$data_type == "STR"] <- "microsat" #same thing
 
 #### Check tissue type ####
 #check for studies without tissue type
-nott_check <- all_dt_accepted[tissue_type == ""] #25 rows without tissue type
+nott_check <- all_dt_accepted[tissue_type == ""] #10 rows without tissue type
 
 #get list of tissue_type
-tissue_type <- sort(unique(all_dt_accepted$tissue_type)) #32 options which is fine
+tissue_type <- sort(unique(all_dt_accepted$tissue_type)) #44 options which is fine
 #will need to separate this column out & perhaps condense later but good enough now
 
 #### Check preservation method ####
 #check for studies without preservation method
-nopm_check <- all_dt_accepted[preserv_method == ""] #45 rows without preservation method
+nopm_check <- all_dt_accepted[preserv_method == ""] #14 rows without preservation method
 
 #get list of preserv_method
-preserv_method <- sort(unique(all_dt_accepted$preserv_method)) #9 options, good
+preserv_method <- sort(unique(all_dt_accepted$preserv_method)) #16 options, good
 #will need to separate this column out later but good enough for now
 
 #### Check extraction method ####
 #check for studies without extraction method
-noem_check <- all_dt_accepted[extract_method == ""] #17 rows without extraction method
+noem_check <- all_dt_accepted[extract_method == ""] #6 rows without extraction method
 
 #get list of extract_method
-extract_method <- sort(unique(all_dt_accepted$extract_method)) #76 options
+extract_method <- sort(unique(all_dt_accepted$extract_method)) #111 options
 #definitely needs to be condensed, will work on later
 
 #### Check sequence platform ####
 #check for  studies without sequence platform
-nosp_check <- all_dt_accepted[seq_platform == ""] #28 rows without sequence platform
+nosp_check <- all_dt_accepted[seq_platform == ""] #15 rows without sequence platform
 
 #get list of seq_platform
-seq_platform <- sort(unique(all_dt_accepted$seq_platform)) #28 options
-#definitely needs to be condensed, will work on later
+seq_platform <- sort(unique(all_dt_accepted$seq_platform)) #35 options
 
 #check rows with extra info
 check <- all_dt_accepted[seq_platform == "SNaPshot Multiplex SNP assay", ]
@@ -342,6 +346,7 @@ all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Fluid Biomark HD S
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Fluidigm EP1 instrumentation"] <- "Fluidigm EP1" #different than BioMark HD but still commonly for gene expression
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Hitachi SQ-5500"] <- "Sanger" #slab gel electrophoresis (more labor-intensive than capillary but still essentially Sanger)
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Illumina-BeadXPress SNP assay"] <- "Illumina_BeadXpress" #format to match notation of other Illumina platforms
+  all_dt_accepted$seq_platofrm[all_dt_accepted$seq_platform == "Illumina_BeadXPress"] <- "Illumina_BeadXpress"
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Illumina GoldenGate"] <- "Illumina_BeadXpress" #per paper, done at Roslin Institute (think mostGolden Gate assays there are with Illumina BeadXpress, not iScan...)
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Ion Protontm"] <- "Ion_Torrent" #typo & also Ion Proton is one of Ion Torrent's sequencers (other one is PGM)
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Li-Cor 4200 Global IR2"] <- "Sanger" #type of chain-termination & gel electrophoresis platform (Sanger)
@@ -354,18 +359,21 @@ all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "SNaPshot Multiplex
  
 #### Check library prep method ####
 #check for studies without lib prep
-nolp_check <- all_dt_accepted[lib_prep_method == ""] #16 rows without lib prep
+nolp_check <- all_dt_accepted[lib_prep_method == ""] #4 rows without lib prep
 
 #get list of lib_prep
-lib_prep <- sort(unique(all_dt_accepted$lib_prep_method)) #8 options --> too many
+lib_prep <- sort(unique(all_dt_accepted$lib_prep_method)) #12 options --> too many
 
 #check rows with extra info
-check <- all_dt_accepted[lib_prep_method == "RAPTURE", ]
+check <- all_dt_accepted[lib_prep_method == "DArTseq", ]
 View(check)
 
 #fix lib prep when necessary
 all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "Meyer & Kircher 2010"] <- "Targeted_sequence_capture" #Meyer & Kircher 2010 is targeted sequence capture (exon)
 all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "RAPTURE"] <- "Targeted_sequence_capture" #RAPTURE == targeted sequence capture (of RAD sites)
+all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "GBS"] <- "SNP_array" #pulled from paper methods cited
+all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "Bead_array"] <- "SNP_array" #to simplify
+  all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "DArTseq"] <- "SNP_array"
 
 #########################################################################################################################################
 
