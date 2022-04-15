@@ -15,6 +15,7 @@ getwd() #check working directory
 library(here)
 library(data.table)
 library(tidyverse)
+library(ggpattern)
 
 #read in data
 all_data <- fread(here("Output", "all_tempgen_data.csv"))
@@ -222,6 +223,7 @@ sd_by_year_plot <- ggplot(data = na.omit(sd_by_year), aes(x = Publication_Year, 
         axis.text = element_text(size = 22), legend.position = "top", 
         legend.title = element_text(size = 22), legend.text = element_text(size = 22))
 sd_by_year_plot
+
 ##########################################################################################################################################
 
 ######## Marker type data exploration ########
@@ -306,7 +308,7 @@ gt_by_tax_plot
 
 ################################################################################################
 
-######## Max generation time data exploration ########
+######## Max year & gentime data exploration ########
 #NOT "usual" deduplicated bc different studies have different species (w/diff generation times)
 
 #### get max length of study in # gens ####
@@ -325,13 +327,13 @@ all_data_dedup_gentime_long[, day_diff := abs(as.Date(all_data_dedup_gentime_lon
 #convert to # days btwn time points to # generations
 all_data_dedup_gentime_long[, gen_diff := all_data_dedup_gentime_long$day_diff/all_data_dedup_gentime_long$gen_time]
 
-#remove day_diff & date columns (will otherwise screw up conversion back to wide format)
+#remove date columns (will otherwise screw up conversion back to wide format)
 all_data_dedup_gentime_long[, date := NULL]
-all_data_dedup_gentime_long[, day_diff := NULL]
 
 #convert back to wide format
 #now, number of generations from TP_1 is in TP_2, etc. columns
-all_data_dedup_gentime_wide <- as.data.table(pivot_wider(data = all_data_dedup_gentime_long,
+all_data_dedup_gentime_long_nodaydiff <- all_data_dedup_gentime_long[, day_diff := NULL] #remove day_diff (otherwise screw up conversion)
+all_data_dedup_gentime_wide <- as.data.table(pivot_wider(data = all_data_dedup_gentime_long_nodaydiff,
                                            names_from = "time_point",
                                            values_from = "gen_diff"))
 
@@ -367,161 +369,392 @@ cols.to.del <- c("TP_2", "TP_3", "TP_4", "TP_5", "TP_6", "TP_7", "TP_8", "TP_9",
                  "TP_52", "TP_53", "TP_54", "TP_55", "TP_56", "TP_57", "TP_58", "TP_59", "TP_60", "TP_61", 
                  "TP_62", "TP_63")
 all_data_dedup_gentime_wide[, (cols.to.del) := NULL]
-dim(all_data_dedup_gentime_wide) #check
+dim(all_data_dedup_gentime_wide) #check 192 x 146
 
-#### max_gentime by taxa ####
+#### get max length of study in # years ####
+#starting from all_data_dedup_gentime_wide dataset
 
-#plot maxgentime_by_tax
-maxgt_by_tax_plot <- ggplot(data = all_data_dedup_gentime_wide, aes(x = tax_group, y = max_gen_diff, color = tax_group)) + 
-  geom_boxplot(size = 2) + 
-  ylim(c(0, 100)) + #cutting off some groups but there are some tax (Branchiopoda) with large gen diff
-  theme_minimal() + ylab("max_num_gen") + 
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 24, face = "bold"),
-        axis.text = element_text(size = 22), legend.position = "right", 
-        axis.text.x = element_text(angle = 315),
-        legend.title = element_text(size = 22), legend.text = element_text(size = 22))
-maxgt_by_tax_plot
+#convert back to wide format
+#now, # of DAYS from TP_1 is in TP_2, etc. columns
+all_data_dedup_time_wide <- as.data.table(pivot_wider(data = all_data_dedup_gentime_long,
+                                                         names_from = "time_point",
+                                                         values_from = "day_diff"))
 
-#### max_gentime by subject ####
+#grab maximum day_diff and put in own column
+all_data_dedup_time_wide$max_day_diff <- pmax(all_data_dedup_time_wide$TP_2, all_data_dedup_time_wide$TP_3, all_data_dedup_time_wide$TP_4, 
+                                                 all_data_dedup_time_wide$TP_5, all_data_dedup_time_wide$TP_6, all_data_dedup_time_wide$TP_7,
+                                                 all_data_dedup_time_wide$TP_8, all_data_dedup_time_wide$TP_9, all_data_dedup_time_wide$TP_10, 
+                                                 all_data_dedup_time_wide$TP_11, all_data_dedup_time_wide$TP_12, all_data_dedup_time_wide$TP_13, 
+                                                 all_data_dedup_time_wide$TP_14, all_data_dedup_time_wide$TP_15, all_data_dedup_time_wide$TP_16,
+                                                 all_data_dedup_time_wide$TP_17, all_data_dedup_time_wide$TP_18, all_data_dedup_time_wide$TP_19,
+                                                 all_data_dedup_time_wide$TP_20, all_data_dedup_time_wide$TP_21, all_data_dedup_time_wide$TP_22, 
+                                                 all_data_dedup_time_wide$TP_23, all_data_dedup_time_wide$TP_24, all_data_dedup_time_wide$TP_25,
+                                                 all_data_dedup_time_wide$TP_26, all_data_dedup_time_wide$TP_27, all_data_dedup_time_wide$TP_28,
+                                                 all_data_dedup_time_wide$TP_29, all_data_dedup_time_wide$TP_30, all_data_dedup_time_wide$TP_31, 
+                                                 all_data_dedup_time_wide$TP_32, all_data_dedup_time_wide$TP_33, all_data_dedup_time_wide$TP_34,
+                                                 all_data_dedup_time_wide$TP_35, all_data_dedup_time_wide$TP_36, all_data_dedup_time_wide$TP_37,
+                                                 all_data_dedup_time_wide$TP_38, all_data_dedup_time_wide$TP_39, all_data_dedup_time_wide$TP_40, 
+                                                 all_data_dedup_time_wide$TP_41, all_data_dedup_time_wide$TP_42, all_data_dedup_time_wide$TP_43,
+                                                 all_data_dedup_time_wide$TP_44, all_data_dedup_time_wide$TP_45, all_data_dedup_time_wide$TP_46,
+                                                 all_data_dedup_time_wide$TP_47, all_data_dedup_time_wide$TP_48, all_data_dedup_time_wide$TP_49, 
+                                                 all_data_dedup_time_wide$TP_50, all_data_dedup_time_wide$TP_51, all_data_dedup_time_wide$TP_52,
+                                                 all_data_dedup_time_wide$TP_53, all_data_dedup_time_wide$TP_54, all_data_dedup_time_wide$TP_55,
+                                                 all_data_dedup_time_wide$TP_56, all_data_dedup_time_wide$TP_57, all_data_dedup_time_wide$TP_58,
+                                                 all_data_dedup_time_wide$TP_59, all_data_dedup_time_wide$TP_60, all_data_dedup_time_wide$TP_61,
+                                                 all_data_dedup_time_wide$TP_62, all_data_dedup_time_wide$TP_63, na.rm = TRUE)
 
-#create dataframe of all maxgentime x subject combinations
-maxgt_adapt <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$subject_1 == "adaptation" | 
-                                                                        all_data_dedup_gentime$subject_2 == "adaptation" | 
-                                                                        all_data_dedup_gentime$subject_3 == "adaptation" | 
-                                                                        all_data_dedup_gentime$subject_4 == "adaptation"])
+#remove excess columns
+all_data_dedup_time_wide[, (cols.to.del) := NULL] #deleting same cols as from max_gentime dataframe
+dim(all_data_dedup_time_wide) #check -- should be same as all_data_dedup_gentime_wide dimensions (yes)
+
+#convert days to years (for ease of interpretation)
+all_data_dedup_time_wide$max_year_diff <- all_data_dedup_time_wide$max_day_diff/365
+
+#### merge max_gentime & time datasets ####
+all_data_dedup_gentime_full <- cbind(all_data_dedup_gentime_wide, max_day_diff = all_data_dedup_time_wide$max_day_diff)
+  all_data_dedup_gentime_full$max_year_diff <- all_data_dedup_gentime_full$max_day_diff/365
+  
+#write out and read in if running separately
+#write.csv(all_data_dedup_gentime_full, "Output/all_data_dedup_gentime_full.csv")
+#all_data_dedup_gentime_full <- fread(here("Output", "all_data_dedup_gentime_full.csv"))
+
+#reformat longer to put values in the same column
+all_data_dedup_gentime_full_longer <- all_data_dedup_gentime_full%>%
+  pivot_longer(cols = c(max_gen_diff, max_year_diff),
+               names_to = "measure_type",
+               values_to = "time_years")
+
+#clean up --> removing Amphipoda & Branchipoda for now because no data for them (?)
+all_data_dedup_gentime_full_longer_clean <-all_data_dedup_gentime_full_longer %>%
+  filter(tax_group != "Amphipoda") %>%
+  filter(tax_group != "Branchiopoda")
+
+#### max_time by taxa ####
+
+#plot tax distribution
+maxtottime_by_tax_plot <- ggplot() +
+  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean,
+               aes(x = tax_group, y = time_years, fill = tax_group, col = measure_type), lwd = 1.5) + 
+  scale_color_manual(values = c("#999999", "#000000")) +
+  scale_fill_manual(values = alpha( c("#1F77B4", "#AEC7E8", "#FF7F0E", "#FFBB78", 
+                                      "#2CA02C","#98DF8A", "#D62728", "#FF9896", 
+                                      "#9467BD", "#C5B0D5", "#C49C94"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150), 
+                     sec.axis = sec_axis(~., name= "Time (in Years)")) +
+  geom_point(data = all_data_dedup_gentime_full_longer_clean,
+             aes(x = tax_group, y = time_years, col = measure_type), 
+             position = position_jitterdodge(jitter.height = 0.2, jitter.width = 0.2), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1), axis.text.y.left = element_text(size = 25, color = "#999999"),
+        axis.text.y.right = element_text(size = 25, color = "#000000"), axis.title.y.left = element_text(size = 25, color = "#999999"),
+        axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
+maxtottime_by_tax_plot
+
+#### max_time by subject ####
+
+#create dataframe of all maxgen x subject combinations
+maxgt_adapt <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" &
+                                                                                     all_data_dedup_gentime_full_longer_clean$subject_1 == "adaptation" |
+                                                                                     all_data_dedup_gentime_full_longer_clean$subject_2 == "adaptation" | 
+                                                                                     all_data_dedup_gentime_full_longer_clean$subject_3 == "adaptation" | 
+                                                                                     all_data_dedup_gentime_full_longer_clean$subject_4 == "adaptation"])
   maxgt_adapt$subject <- "adaptation"
-  colnames(maxgt_adapt) <- c("max_gen_diff", "subject")
-maxgt_connect <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$subject_1 == "connectivity" | 
-                                                                          all_data_dedup_gentime$subject_2 == "connectivity" | 
-                                                                          all_data_dedup_gentime$subject_3 == "connectivity" | 
-                                                                          all_data_dedup_gentime$subject_4 == "connectivity"])
+  maxgt_adapt$measure_type <- "max_gen_diff"
+  colnames(maxgt_adapt) <- c("time_years", "subject", "measure_type")
+maxgt_connect <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" &
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_1 == "connectivity" |
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_2 == "connectivity" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_3 == "connectivity" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_4 == "connectivity"])
   maxgt_connect$subject <- "connectivity"
-  colnames(maxgt_connect) <- c("max_gen_diff", "subject")
-maxgt_div <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$subject_1 == "diversity" | 
-                                                                      all_data_dedup_gentime$subject_2 == "diversity" | 
-                                                                      all_data_dedup_gentime$subject_3 == "diversity" | 
-                                                                      all_data_dedup_gentime$subject_4 == "diversity"])
+  maxgt_connect$measure_type <- "max_gen_diff"
+  colnames(maxgt_connect) <- c("time_years", "subject", "measure_type")
+maxgt_div <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" &
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_1 == "diversity" |
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_2 == "diversity" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_3 == "diversity" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_4 == "diversity"])
   maxgt_div$subject <- "diversity"
-  colnames(maxgt_div) <- c("max_gen_diff", "subject")
-maxgt_popsize <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$subject_1 == "popsize" | 
-                                                                          all_data_dedup_gentime$subject_2 == "popsize" | 
-                                                                          all_data_dedup_gentime$subject_3 == "popsize" | 
-                                                                          all_data_dedup_gentime$subject_4 == "popsize"])
+  maxgt_div$measure_type <- "max_gen_diff"
+  colnames(maxgt_div) <- c("time_years", "subject", "measure_type")
+maxgt_popsize <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" &
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_1 == "popsize" |
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_2 == "popsize" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_3 == "popsize" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_4 == "popsize"])
   maxgt_popsize$subject <- "popsize"
-  colnames(maxgt_popsize) <- c("max_gen_diff", "subject")
+  maxgt_popsize$measure_type <- "max_gen_diff"
+  colnames(maxgt_popsize) <- c("time_years", "subject", "measure_type")
+  
+#create dataframe of all maxyear x subject combinations
+maxyear_adapt <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" &
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_1 == "adaptation" |
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_2 == "adaptation" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_3 == "adaptation" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$subject_4 == "adaptation"])
+  maxyear_adapt$subject <- "adaptation"
+  maxyear_adapt$measure_type <- "max_year_diff"
+  colnames(maxyear_adapt) <- c("time_years", "subject", "measure_type")
+maxyear_connect <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" &
+                                                                                           all_data_dedup_gentime_full_longer_clean$subject_1 == "connectivity" |
+                                                                                           all_data_dedup_gentime_full_longer_clean$subject_2 == "connectivity" | 
+                                                                                           all_data_dedup_gentime_full_longer_clean$subject_3 == "connectivity" | 
+                                                                                           all_data_dedup_gentime_full_longer_clean$subject_4 == "connectivity"])
+  maxyear_connect$subject <- "connectivity"
+  maxyear_connect$measure_type <- "max_year_diff"
+  colnames(maxyear_connect) <- c("time_years", "subject", "measure_type")
+maxyear_div <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" &
+                                                                                       all_data_dedup_gentime_full_longer_clean$subject_1 == "diversity" |
+                                                                                       all_data_dedup_gentime_full_longer_clean$subject_2 == "diversity" | 
+                                                                                       all_data_dedup_gentime_full_longer_clean$subject_3 == "diversity" | 
+                                                                                       all_data_dedup_gentime_full_longer_clean$subject_4 == "diversity"])
+  maxyear_div$subject <- "diversity"
+  maxyear_div$measure_type <- "max_year_diff"
+  colnames(maxyear_div) <- c("time_years", "subject", "measure_type")
+maxyear_popsize <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" &
+                                                                                           all_data_dedup_gentime_full_longer_clean$subject_1 == "popsize" |
+                                                                                           all_data_dedup_gentime_full_longer_clean$subject_2 == "popsize" | 
+                                                                                           all_data_dedup_gentime_full_longer_clean$subject_3 == "popsize" | 
+                                                                                           all_data_dedup_gentime_full_longer_clean$subject_4 == "popsize"])
+  maxyear_popsize$subject <- "popsize"
+  maxyear_popsize$measure_type <- "max_year_diff"
+  colnames(maxyear_popsize) <- c("time_years", "subject", "measure_type")
   
 #rbind all data.frames together
-maxgt_all_subjects <- rbind(maxgt_adapt, maxgt_connect, maxgt_div, maxgt_popsize)
+maxgen_maxyear_all_subjects <- rbind(maxgt_adapt, maxgt_connect, maxgt_div, maxgt_popsize, 
+                                     maxyear_adapt, maxyear_connect, maxyear_div, maxyear_popsize)
+  maxgen_maxyear_all_subjects <- na.omit(maxgen_maxyear_all_subjects) #remove nas
 
-#plot maxgt_by_subject 
-maxgt_by_subject_plot <- ggplot(data = na.omit(maxgt_all_subjects), aes(x = subject, y = max_gen_diff, color = subject)) + 
-  geom_boxplot(size = 2) +
-  #ylim(c(0, 100)) +
-  theme_minimal() + ylab("max_num_gen") +
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 24, face = "bold"),
-        axis.text = element_text(size = 22), legend.position = "right", 
-        legend.title = element_text(size = 22), legend.text = element_text(size = 22))
-maxgt_by_subject_plot
+#plot maxtottime_by_subject
+maxtottime_by_subject_plot <- ggplot() +
+  geom_boxplot(data = maxgen_maxyear_all_subjects,
+               aes(x = subject, y = time_years, fill = subject, col = measure_type), lwd = 1.5) + 
+  scale_color_manual(values = c("#999999", "#000000")) +
+  scale_fill_manual(values = alpha( c("#1F77B4", "#FF7F0E", "#2CA02C", "#C5B0D5"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150), 
+                     sec.axis = sec_axis(~., name= "Time (in Years)")) +
+  geom_point(data = maxgen_maxyear_all_subjects,
+             aes(x = subject, y = time_years, col = measure_type), 
+             position = position_jitterdodge(jitter.height = 0.2, jitter.width = 0.2), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1), axis.text.y.left = element_text(size = 25, color = "#999999"),
+        axis.text.y.right = element_text(size = 25, color = "#000000"), axis.title.y.left = element_text(size = 25, color = "#999999"),
+        axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
+maxtottime_by_subject_plot
 
-#### max_gentime by driver ####
+#### max_time by driver ####
+
+#fix missing driver in driver_process1 column
+all_data_dedup_gentime_full_longer_clean$driver_process1[all_data_dedup_gentime_full_longer_clean$driver_process1 == ""] <- "no_driver" #bc in this column, if not listed then does not have driver
 
 #create dataframe of all maxgentime x driver combinations
-maxgt_climchange <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$driver_process1 == "climate_change" | 
-                                                                             all_data_dedup_gentime$driver_process2 == "climate_change" | 
-                                                                             all_data_dedup_gentime$driver_process3 == "climate_change"]) 
+maxgt_climchange <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" & 
+                                                                                        all_data_dedup_gentime_full_longer_clean$driver_process1 == "climate_change" | 
+                                                                                        all_data_dedup_gentime_full_longer_clean$driver_process2 == "climate_change" | 
+                                                                                        all_data_dedup_gentime_full_longer_clean$driver_process3 == "climate_change"]) 
   maxgt_climchange$driver_process <- "climate_change"
-  colnames(maxgt_climchange) <- c("max_gen_diff", "driver_process")
-maxgt_comp <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$driver_process1 == "competition" | 
-                                                                       all_data_dedup_gentime$driver_process2 == "competition" | 
-                                                                       all_data_dedup_gentime$driver_process3 == "competition"]) 
+  maxgt_climchange$measure_type <- "max_gen_diff"
+  colnames(maxgt_climchange) <- c("time_years", "driver_process", "measure_type")
+maxgt_comp <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "competition" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process2 == "competition" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process3 == "competition"]) 
   maxgt_comp$driver_process <- "competition"
-  colnames(maxgt_comp) <- c("max_gen_diff", "driver_process")
-maxgt_disease <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$driver_process1 == "disease" | 
-                                                                          all_data_dedup_gentime$driver_process2 == "disease" | 
-                                                                          all_data_dedup_gentime$driver_process3 == "disease"]) 
+  maxgt_comp$measure_type <- "max_gen_diff"
+  colnames(maxgt_comp) <- c("time_years", "driver_process", "measure_type")
+maxgt_disease <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "disease" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process2 == "disease" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process3 == "disease"]) 
   maxgt_disease$driver_process <- "disease"
-  colnames(maxgt_disease) <- c("max_gen_diff", "driver_process")
-maxgt_envvar <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$driver_process1 == "env_variation" | 
-                                                                         all_data_dedup_gentime$driver_process2 == "env_variation" | 
-                                                                         all_data_dedup_gentime$driver_process3 == "env_variation"]) 
+  maxgt_disease$measure_type <- "max_gen_diff"
+  colnames(maxgt_disease) <- c("time_years", "driver_process", "measure_type")
+maxgt_envvar <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "env_variation" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process2 == "env_variation" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process3 == "env_variation"]) 
   maxgt_envvar$driver_process <- "env_variation"
-  colnames(maxgt_envvar) <- c("max_gen_diff", "driver_process")
-maxgt_habloss <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$driver_process1 == "habitat_loss" | 
-                                                                          all_data_dedup_gentime$driver_process2 == "habitat_loss" | 
-                                                                          all_data_dedup_gentime$driver_process3 == "habitat_loss"]) 
+  maxgt_envvar$measure_type <- "max_gen_diff"
+  colnames(maxgt_envvar) <- c("time_years", "driver_process", "measure_type")
+maxgt_habloss <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "habitat_loss" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process2 == "habitat_loss" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process3 == "habitat_loss"]) 
   maxgt_habloss$driver_process <- "habitat_loss"
-  colnames(maxgt_habloss) <- c("max_gen_diff", "driver_process")
-maxgt_humexploit <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$driver_process1 == "human_exploitation" | 
-                                                                             all_data_dedup_gentime$driver_process2 == "human_exploitation" | 
-                                                                             all_data_dedup_gentime$driver_process3 == "human_exploitation"]) 
+  maxgt_habloss$measure_type <- "max_gen_diff"
+  colnames(maxgt_habloss) <- c("time_years", "driver_process", "measure_type")
+maxgt_humexploit<- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "human_exploitation" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process2 == "human_exploitation" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process3 == "human_exploitation"]) 
   maxgt_humexploit$driver_process <- "human_exploitation"
-  colnames(maxgt_humexploit) <- c("max_gen_diff", "driver_process")
-maxgt_invspecies <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$driver_process1 == "invasive_species" | 
-                                                                             all_data_dedup_gentime$driver_process2 == "invasive_species" | 
-                                                                             all_data_dedup_gentime$driver_process3 == "invasive_species"]) 
+  maxgt_humexploit$measure_type <- "max_gen_diff"
+  colnames(maxgt_humexploit) <- c("time_years", "driver_process", "measure_type")
+maxgt_invspecies <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "invasive_species" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process2 == "invasive_species" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process3 == "invasive_species"]) 
   maxgt_invspecies$driver_process <- "invasive_species"
-  colnames(maxgt_invspecies) <- c("max_gen_diff", "driver_process")
-maxgt_natdisast <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$driver_process1 == "natural_disaster" | 
-                                                                            all_data_dedup_gentime$driver_process2 == "natural_disaster" | 
-                                                                            all_data_dedup_gentime$driver_process3 == "natural_disaster"]) 
-  maxgt_natdisast$driver_process <- "natural_disaster"
-  colnames(maxgt_natdisast) <- c("max_gen_diff", "driver_process")
-maxgt_nodriver <- as.data.frame(all_data_dedup_gentime_wide$max_gen_diff[all_data_dedup_gentime$driver_process1 == ""]) #only in first driver column bc if missing in subsequent ones, then only have 1 driver
+  maxgt_invspecies$measure_type <- "max_gen_diff"
+  colnames(maxgt_invspecies) <- c("time_years", "driver_process", "measure_type")
+maxgt_natdis <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "natural_disaster" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process2 == "natural_disaster" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process3 == "natural_disaster"]) 
+  maxgt_natdis$driver_process <- "natural_disaster"
+  maxgt_natdis$measure_type <- "max_gen_diff"
+  colnames(maxgt_natdis) <- c("time_years", "driver_process", "measure_type")
+maxgt_nodriver <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "no_driver"]) 
   maxgt_nodriver$driver_process <- "no_driver"
-  colnames(maxgt_nodriver) <- c("max_gen_diff", "driver_process")
+  maxgt_nodriver$measure_type <- "max_gen_diff"
+  colnames(maxgt_nodriver) <- c("time_years", "driver_process", "measure_type")
   
-#rbind all data.frames together
-maxgt_all_drivers <- rbind(maxgt_climchange, maxgt_comp, maxgt_disease, maxgt_envvar, 
-                           maxgt_habloss, maxgt_humexploit, maxgt_invspecies, 
-                           maxgt_natdisast, maxgt_nodriver)
-  
-#plot maxgt_by_driver
-maxgt_by_driver_plot <- ggplot(data = na.omit(maxgt_all_drivers), aes(x = driver_process, y = max_gen_diff, color = driver_process)) + 
-  geom_boxplot(size = 2) +
-  ylim(c(0, 100)) +
-  theme_minimal() + ylab("max_num_gen") +
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 24, face = "bold"),
-        axis.text = element_text(size = 22), legend.position = "right", 
-        axis.text.x = element_text(angle = 315),
-        legend.title = element_text(size = 22), legend.text = element_text(size = 22))
-maxgt_by_driver_plot
+#create dataframe of all maxyear x driver combinations
+maxyear_climchange <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "climate_change" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process2 == "climate_change" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process3 == "climate_change"]) 
+  maxyear_climchange$driver_process <- "climate_change"
+  maxyear_climchange$measure_type <- "max_year_diff"
+  colnames(maxyear_climchange) <- c("time_years", "driver_process", "measure_type")
+maxyear_comp <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" & 
+                                                                                    all_data_dedup_gentime_full_longer_clean$driver_process1 == "competition" | 
+                                                                                    all_data_dedup_gentime_full_longer_clean$driver_process2 == "competition" | 
+                                                                                    all_data_dedup_gentime_full_longer_clean$driver_process3 == "competition"]) 
+  maxyear_comp$driver_process <- "competition"
+  maxyear_comp$measure_type <- "max_year_diff"
+  colnames(maxyear_comp) <- c("time_years", "driver_process", "measure_type")
+maxyear_disease <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" & 
+                                                                                       all_data_dedup_gentime_full_longer_clean$driver_process1 == "disease" | 
+                                                                                       all_data_dedup_gentime_full_longer_clean$driver_process2 == "disease" | 
+                                                                                       all_data_dedup_gentime_full_longer_clean$driver_process3 == "disease"]) 
+  maxyear_disease$driver_process <- "disease"
+  maxyear_disease$measure_type <- "max_year_diff"
+  colnames(maxyear_disease) <- c("time_years", "driver_process", "measure_type")
+maxyear_envvar <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" & 
+                                                                                      all_data_dedup_gentime_full_longer_clean$driver_process1 == "env_variation" | 
+                                                                                      all_data_dedup_gentime_full_longer_clean$driver_process2 == "env_variation" | 
+                                                                                      all_data_dedup_gentime_full_longer_clean$driver_process3 == "env_variation"]) 
+  maxyear_envvar$driver_process <- "env_variation"
+  maxyear_envvar$measure_type <- "max_year_diff"
+  colnames(maxyear_envvar) <- c("time_years", "driver_process", "measure_type")
+maxyear_habloss <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" & 
+                                                                                       all_data_dedup_gentime_full_longer_clean$driver_process1 == "habitat_loss" | 
+                                                                                       all_data_dedup_gentime_full_longer_clean$driver_process2 == "habitat_loss" | 
+                                                                                       all_data_dedup_gentime_full_longer_clean$driver_process3 == "habitat_loss"]) 
+  maxyear_habloss$driver_process <- "habitat_loss"
+  maxyear_habloss$measure_type <- "max_year_diff"
+  colnames(maxyear_habloss) <- c("time_years", "driver_process", "measure_type")
+maxyear_humexploit<- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" & 
+                                                                                         all_data_dedup_gentime_full_longer_clean$driver_process1 == "human_exploitation" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$driver_process2 == "human_exploitation" | 
+                                                                                         all_data_dedup_gentime_full_longer_clean$driver_process3 == "human_exploitation"]) 
+  maxyear_humexploit$driver_process <- "human_exploitation"
+  maxyear_humexploit$measure_type <- "max_year_diff"
+  colnames(maxyear_humexploit) <- c("time_years", "driver_process", "measure_type")
+maxyear_invspecies <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" & 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process1 == "invasive_species" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process2 == "invasive_species" | 
+                                                                                          all_data_dedup_gentime_full_longer_clean$driver_process3 == "invasive_species"]) 
+  maxyear_invspecies$driver_process <- "invasive_species"
+  maxyear_invspecies$measure_type <- "max_year_diff"
+  colnames(maxyear_invspecies) <- c("time_years", "driver_process", "measure_type")
+maxyear_natdis <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" & 
+                                                                                      all_data_dedup_gentime_full_longer_clean$driver_process1 == "natural_disaster" | 
+                                                                                      all_data_dedup_gentime_full_longer_clean$driver_process2 == "natural_disaster" | 
+                                                                                      all_data_dedup_gentime_full_longer_clean$driver_process3 == "natural_disaster"]) 
+  maxyear_natdis$driver_process <- "natural_disaster"
+  maxyear_natdis$measure_type <- "max_year_diff"
+  colnames(maxyear_natdis) <- c("time_years", "driver_process", "measure_type")
+maxyear_nodriver <- as.data.frame(all_data_dedup_gentime_full_longer_clean$time_years[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff" & 
+                                                                                        all_data_dedup_gentime_full_longer_clean$driver_process1 == "no_driver"]) 
+  maxyear_nodriver$driver_process <- "no_driver"
+  maxyear_nodriver$measure_type <- "max_year_diff"
+  colnames(maxyear_nodriver) <- c("time_years", "driver_process", "measure_type")
 
-#### max_gentime by study_design ####
+#rbind all data.frames together
+maxgen_maxyear_all_drivers <- rbind(maxgt_climchange, maxgt_comp, maxgt_disease, maxgt_envvar, 
+                                    maxgt_habloss, maxgt_humexploit, maxgt_invspecies, maxgt_natdis, 
+                                    maxgt_nodriver, maxyear_climchange, maxyear_comp, maxyear_disease, 
+                                    maxyear_envvar, maxyear_habloss, maxyear_humexploit, maxyear_invspecies, 
+                                    maxyear_natdis, maxyear_nodriver)
+maxgen_maxyear_all_drivers <- na.omit(maxgen_maxyear_all_drivers) #remove nas
+
+#plot maxtottime_by_driver
+maxtottime_by_driver_plot <- ggplot() +
+  geom_boxplot(data = maxgen_maxyear_all_drivers,
+               aes(x = driver_process, y = time_years, fill = driver_process, col = measure_type), lwd = 1.5) + 
+  scale_color_manual(values = c("#999999", "#000000")) +
+  scale_fill_manual(values = alpha( c("#1F77B4", "#AEC7E8", "#FF7F0E", "#FFBB78", 
+                                      "#2CA02C","#98DF8A", "#D62728", "#FF9896", 
+                                      "#9467BD"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150), 
+                     sec.axis = sec_axis(~., name= "Time (in Years)")) +
+  geom_point(data = maxgen_maxyear_all_drivers,
+             aes(x = driver_process, y = time_years, col = measure_type), 
+             position = position_jitterdodge(jitter.height = 0.2, jitter.width = 0.2), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1), axis.text.y.left = element_text(size = 25, color = "#999999"),
+        axis.text.y.right = element_text(size = 25, color = "#000000"), axis.title.y.left = element_text(size = 25, color = "#999999"),
+        axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
+maxtottime_by_driver_plot
+
+#### max_time by study_design ####
 
 #subset to only studies that have a study design
-all_data_dedup_gentime_wide_nonasd <- all_data_dedup_gentime_wide[study_design != "",]
+all_data_dedup_gentime_full_longer_clean_nonasd <- all_data_dedup_gentime_full_longer_clean[all_data_dedup_gentime_full_longer_clean$study_design != "",]
 
-#plot maxgt_by_sd
-maxgt_by_sd_plot <- ggplot(data = all_data_dedup_gentime_wide_nonasd, aes(x = study_design, y = max_gen_diff, color = study_design)) + 
-  geom_boxplot(size = 2) +
-  #ylim(c(0, 100)) +
-  theme_minimal() + ylab("max_num_gen") +
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 24, face = "bold"),
-        axis.text = element_text(size = 22), legend.position = "right", 
-        legend.title = element_text(size = 22), legend.text = element_text(size = 22))
-maxgt_by_sd_plot
+#plot maxtottime_by_sd
+maxtottime_by_sd_plot <- ggplot() +
+  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean_nonasd,
+               aes(x = study_design, y = time_years, fill = study_design, col = measure_type), lwd = 1.5) + 
+  scale_color_manual(values = c("#999999", "#000000")) +
+  scale_fill_manual(values = alpha( c("#1F77B4", "#FF7F0E"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150), 
+                     sec.axis = sec_axis(~., name= "Time (in Years)")) +
+  geom_point(data = all_data_dedup_gentime_full_longer_clean_nonasd,
+             aes(x = study_design, y = time_years, col = measure_type), 
+             position = position_jitterdodge(jitter.height = 0.2, jitter.width = 0.2), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1), axis.text.y.left = element_text(size = 25, color = "#999999"),
+        axis.text.y.right = element_text(size = 25, color = "#000000"), axis.title.y.left = element_text(size = 25, color = "#999999"),
+        axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
+maxtottime_by_sd_plot
 
-#### max_gentime by system ####
+#### max_time by system ####
 
 #plot maxgt_by_system
-maxgt_by_system_plot <- ggplot(data = all_data_dedup_gentime_wide, aes(x = system, y = max_gen_diff, color = system)) + 
-  geom_boxplot(size = 2) +
-  ylim(c(0, 100)) +
-  theme_minimal() + ylab("max_num_gen") +
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 24, face = "bold"),
-        axis.text = element_text(size = 22), legend.position = "right", 
-        legend.title = element_text(size = 22), legend.text = element_text(size = 22))
-maxgt_by_system_plot
+maxtottime_by_system_plot <- ggplot() +
+  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean,
+               aes(x = system, y = time_years, fill = system, col = measure_type), lwd = 1.5) + 
+  scale_color_manual(values = c("#999999", "#000000")) +
+  scale_fill_manual(values = alpha( c("#1F77B4", "#FF7F0E", "#2CA02C", "#C5B0D5"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150), 
+                     sec.axis = sec_axis(~., name= "Time (in Years)")) +
+  geom_point(data = all_data_dedup_gentime_full_longer_clean,
+             aes(x = system, y = time_years, col = measure_type), 
+             position = position_jitterdodge(jitter.height = 0.2, jitter.width = 0.2), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1), axis.text.y.left = element_text(size = 25, color = "#999999"),
+        axis.text.y.right = element_text(size = 25, color = "#000000"), axis.title.y.left = element_text(size = 25, color = "#999999"),
+        axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
+maxtottime_by_system_plot
 
 ################################################################################################
 
 ######## Driver data exploration ########
-#using deduplicated since interested in driver(s) of publication -- don't want to inflate with multiple studies in a publication
+#Using deduplicated since interested in driver(s) of publication -- don't want to inflate with multiple studies in a publication
 
 #fix missing driver in driver_process1 column
 all_data_deduplicate$driver_process1[all_data_deduplicate$driver_process1 == ""] <- "no_driver" #bc in this column, if not listed then does not have driver
@@ -742,8 +975,67 @@ driver_by_taxa_plot <- ggplot(data = driver_by_taxa, aes(x = reorder(tax_group, 
         legend.title = element_text(size = 22), legend.text = element_text(size = 22))
 driver_by_taxa_plot 
 
+##########################################################################################################################################
+
+######## Library prep data exploration ########
+#NOT "usual" deduplicated bc different studies use different markers (and different lib prep techniques)
+
+#removing rows if have same Article_Number (same publication) and same lib prep
+all_data_dedup_libprep <- distinct(all_data, Article_Number, lib_prep_method, .keep_all = TRUE)
+
+#### lib_prep by subject ####
+
+#count # marker occurrences by subject
+libprep_by_subject1 <- all_data_dedup_libprep[, .N, by = .(subject_1, lib_prep_method)]
+  colnames(libprep_by_subject1) <- c("subject", "lib_prep_method", "N1")
+libprep_by_subject2 <- all_data_dedup_libprep[, .N, by = .(subject_2, lib_prep_method)]
+  libprep_by_subject2 <- subset(libprep_by_subject2, libprep_by_subject2$subject_2 != "")
+  colnames(libprep_by_subject2) <- c("subject", "lib_prep_method", "N2")
+libprep_by_subject3 <- all_data_dedup_libprep[, .N, by = .(subject_3, lib_prep_method)]
+  libprep_by_subject3 <- subset(libprep_by_subject3, libprep_by_subject3$subject_3 != "")
+  colnames(libprep_by_subject3) <- c("subject", "lib_prep_method", "N3")
+libprep_by_subject4 <- all_data_dedup_libprep[, .N, by = .(subject_4, lib_prep_method)]
+  libprep_by_subject4 <- subset(libprep_by_subject4, libprep_by_subject4$subject_4 != "")
+  colnames(libprep_by_subject4) <- c("subject", "lib_prep_method", "N4")
+  libprep_by_subject4 <- libprep_by_subject4[-6 ,] #wouldn't delete 5th row with missing data for some reason, doing manually
+
+#merge libprep_by_subject data.tables
+libprep_by_subject_list <- list(libprep_by_subject1, libprep_by_subject2, libprep_by_subject3, libprep_by_subject4)
+libprep_by_subject <- libprep_by_subject_list %>% reduce(full_join, by = c("subject", "lib_prep_method"), all = TRUE)
+
+#sum across columns to get total N libprep_by_subject
+libprep_by_subject$Ntot <- rowSums(libprep_by_subject[, c("N1", "N2", "N3", "N4")], na.rm = TRUE)
+  libprep_by_subject <- subset(libprep_by_subject, libprep_by_subject$lib_prep_method != "")
+
+#plot libprep_by_subject
+libprep_by_subject_plot <- ggplot(data = libprep_by_subject, aes(x = subject, y = Ntot, fill = lib_prep_method)) + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
+  theme_minimal() + 
+  theme(axis.ticks = element_line(color = "black", size = 1),
+        axis.title = element_text(size = 24, face = "bold"),
+        axis.text = element_text(size = 22), legend.position = "right", 
+        legend.title = element_text(size = 22), legend.text = element_text(size = 22))
+libprep_by_subject_plot
+
+#### libprep by year ####
+libprep_by_year <- all_data_dedup_libprep[, .N, by = .(lib_prep_method, Publication_Year)]
+libprep_by_year <- libprep_by_year[lib_prep_method == "", lib_prep_method := NA] #change rows with blank lib_prep_method to NA
+
+#plot libprep_by_year
+#HRM_assay, RNA, Whole_genome don't show bc just a point
+libprep_by_year_plot <- ggplot(data = na.omit(libprep_by_year), aes(x = Publication_Year, y = N, group = lib_prep_method)) + 
+  geom_line(aes(color = lib_prep_method), size = 4, se = FALSE) + 
+  #geom_point(aes(color = lib_prep_method), size = 2) + 
+  theme_minimal() + 
+  theme(axis.ticks = element_line(color = "black", size = 1),
+        axis.title = element_text(size = 24, face = "bold"),
+        axis.text = element_text(size = 22), legend.position = "right", 
+        legend.title = element_text(size = 22), legend.text = element_text(size = 22))
+libprep_by_year_plot
+
+################################################################################################
+
 #### TO DO
 #incorporate # of samples and sample size ranges into analyses
-#look at total range of time (not just generations) as well --> AND average time/# generations between samples (does this differ by study design?)
 #geographic trends -- count up countries and plot, see if there is an interaction with type/driver of change, taxa, system, etc.
-#incorporate preservation methods/tissue type/lib prep/seq_platform trends through time
+#incorporate preservation methods/tissue type/seq_platform trends through time
