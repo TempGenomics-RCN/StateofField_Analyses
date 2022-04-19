@@ -209,6 +209,19 @@ sd_by_subject_plot <- ggplot(data = sd_by_subject, aes(x = subject, y = Ntot, fi
         legend.title = element_text(size = 22), legend.text = element_text(size = 22))
 sd_by_subject_plot
 
+#### study_design by taxa ####
+sd_by_tax <- all_data_deduplicate[, .N, by = .(study_design, tax_group)]
+
+#plot sd by taxa
+sd_by_tax_plot <- ggplot(data = na.omit(sd_by_tax), aes(x = study_design, y = N, fill = tax_group)) + 
+  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  theme_minimal() + 
+  theme(axis.ticks = element_line(color = "black", size = 1),
+        axis.title = element_text(size = 24, face = "bold"),
+        axis.text = element_text(size = 22), legend.position = "top", 
+        legend.title = element_text(size = 22), legend.text = element_text(size = 22))
+sd_by_tax_plot
+
 #### study_design by year ####
 sd_by_year <- all_data_deduplicate[, .N, by = .(study_design, Publication_Year)]
   sd_by_year <- sd_by_year[study_design == "", study_design := NA] #change rows with blank data_type to NA
