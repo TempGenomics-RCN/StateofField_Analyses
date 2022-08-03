@@ -23,7 +23,7 @@ all_data <- fread(here("Output", "all_tempgen_data.csv"))
 #create non-duplicated dataset
 #some studies have multiple rows (bc looked at more than one species, marker type, etc)
 #don't want to double count these
-all_data_deduplicate <- all_data[!duplicated(all_data$Article_Number), ]
+all_data_deduplicate <- all_data[!duplicated(all_data$Article_Number), ] #down from 298 to 229 rows
 
 ##########################################################################################################################################
 
@@ -97,7 +97,7 @@ system_by_subject$Ntot <- rowSums(system_by_subject[, c("N1", "N2", "N3", "N4")]
 #plot system_by_subject
 #position = fill to get relative percentages, position = stack to get absolute counts
 s_by_s_plot <- ggplot(data = system_by_subject, aes(x = subject, y = Ntot, fill = system)) + 
-  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -149,7 +149,7 @@ tax_by_subject$Ntot <- rowSums(tax_by_subject[, c("N1", "N2", "N3", "N4")], na.r
 
 #plot tax_by_subject
 t_by_s_plot <- ggplot(data = tax_by_subject, aes(x = subject, y = Ntot, fill = tax_group)) + 
-  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -162,7 +162,7 @@ tax_by_system <- all_data_deduplicate[, .N, by = .(system, tax_group)]
 
 #plot taxa by system
 t_by_syst_plot <- ggplot(data = tax_by_system, aes(x = system, y = N, fill = tax_group)) + 
-  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -201,7 +201,7 @@ sd_by_subject$Ntot <- rowSums(sd_by_subject[, c("N1", "N2", "N3", "N4")], na.rm 
 
 #plot sd by system
 sd_by_subject_plot <- ggplot(data = sd_by_subject, aes(x = subject, y = Ntot, fill = study_design)) + 
-  geom_bar(position = "stack", stat = "identity", color = "black") + 
+  geom_bar(position = "fill", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -214,7 +214,7 @@ sd_by_tax <- all_data_deduplicate[, .N, by = .(study_design, tax_group)]
 
 #plot sd by taxa
 sd_by_tax_plot <- ggplot(data = na.omit(sd_by_tax), aes(x = study_design, y = N, fill = tax_group)) + 
-  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -273,7 +273,7 @@ marker_by_subject$Ntot <- rowSums(marker_by_subject[, c("N1", "N2", "N3", "N4")]
 
 #plot marker_by_subject
 marker_by_subject_plot <- ggplot(data = marker_by_subject, aes(x = subject, y = Ntot, fill = data_type)) + 
-  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -334,6 +334,8 @@ all_data_dedup_gentime_long <- as.data.table(pivot_longer(data = all_data_dedup_
 
 #calculate diff (in days) between TP 1 and each subsequent TP in a study (now in date column)
 #have to use absolute value bc not everyone recorded sampling dates in same order
+#NOTE: this might not be totally accurate --- some studies don't sample all sites at earliest & latest time point...
+#should be a good approximation though?
 all_data_dedup_gentime_long[, day_diff := abs(as.Date(all_data_dedup_gentime_long$TP_1, format = "%Y.%m.%d") - 
                                   as.Date(all_data_dedup_gentime_long$date, format = "%Y.%m.%d"))]
 
@@ -345,7 +347,7 @@ all_data_dedup_gentime_long[, date := NULL]
 
 #convert back to wide format
 #now, number of generations from TP_1 is in TP_2, etc. columns
-all_data_dedup_gentime_long_nodaydiff <- all_data_dedup_gentime_long[, day_diff := NULL] #remove day_diff (otherwise screw up conversion)
+all_data_dedup_gentime_long_nodaydiff <- all_data_dedup_gentime_long[, !"day_diff"] #remove day_diff (otherwise screw up conversion)
 all_data_dedup_gentime_wide <- as.data.table(pivot_wider(data = all_data_dedup_gentime_long_nodaydiff,
                                            names_from = "time_point",
                                            values_from = "gen_diff"))
@@ -382,14 +384,15 @@ cols.to.del <- c("TP_2", "TP_3", "TP_4", "TP_5", "TP_6", "TP_7", "TP_8", "TP_9",
                  "TP_52", "TP_53", "TP_54", "TP_55", "TP_56", "TP_57", "TP_58", "TP_59", "TP_60", "TP_61", 
                  "TP_62", "TP_63")
 all_data_dedup_gentime_wide[, (cols.to.del) := NULL]
-dim(all_data_dedup_gentime_wide) #check 192 x 146
+dim(all_data_dedup_gentime_wide) #check 239 x 145
 
 #### get max length of study in # years ####
 #starting from all_data_dedup_gentime_wide dataset
 
 #convert back to wide format
 #now, # of DAYS from TP_1 is in TP_2, etc. columns
-all_data_dedup_time_wide <- as.data.table(pivot_wider(data = all_data_dedup_gentime_long,
+all_data_dedup_time_long <- all_data_dedup_gentime_long[, !"gen_diff"] #remove gen_diff (otherwise screw up conversion)
+all_data_dedup_time_wide <- as.data.table(pivot_wider(data = all_data_dedup_time_long,
                                                          names_from = "time_point",
                                                          values_from = "day_diff"))
 
@@ -449,9 +452,9 @@ maxtottime_by_tax_plot <- ggplot() +
   geom_boxplot(data = all_data_dedup_gentime_full_longer_clean,
                aes(x = tax_group, y = time_years, fill = tax_group, col = measure_type), lwd = 1.5) + 
   scale_color_manual(values = c("#999999", "#000000")) +
-  scale_fill_manual(values = alpha( c("#1F77B4", "#AEC7E8", "#FF7F0E", "#FFBB78", 
-                                      "#2CA02C","#98DF8A", "#D62728", "#FF9896", 
-                                      "#9467BD", "#C5B0D5", "#C49C94"), 0.6)) +
+  #scale_fill_manual(values = alpha( c("#1F77B4", "#AEC7E8", "#FF7F0E", "#FFBB78", 
+             #                         "#2CA02C","#98DF8A", "#D62728", "#FF9896", 
+         #                             "#9467BD", "#C5B0D5", "#C49C94"), 0.6)) +
   scale_y_continuous(name = "Number of Generations", limits = c(0, 150), 
                      sec.axis = sec_axis(~., name= "Time (in Years)")) +
   geom_point(data = all_data_dedup_gentime_full_longer_clean,
@@ -464,6 +467,40 @@ maxtottime_by_tax_plot <- ggplot() +
         axis.text.y.right = element_text(size = 25, color = "#000000"), axis.title.y.left = element_text(size = 25, color = "#999999"),
         axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
 maxtottime_by_tax_plot
+
+maxgentime_by_tax_plot <- ggplot() +
+  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff", ],
+               aes(x = tax_group, y = time_years, color = tax_group), lwd = 1.5) + 
+  #scale_fill_manual(values = alpha( c("#1F77B4", "#AEC7E8", "#FF7F0E", "#FFBB78", 
+  #                         "#2CA02C","#98DF8A", "#D62728", "#FF9896", 
+  #                             "#9467BD", "#C5B0D5", "#C49C94"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150)) +
+  geom_point(data = all_data_dedup_gentime_full_longer_clean[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff", ],
+             aes(x = tax_group, y = time_years), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"),axis.title.x = element_blank())
+maxgentime_by_tax_plot
+
+maxyear_by_tax_plot <- ggplot() +
+  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff", ],
+               aes(x = tax_group, y = time_years, color = tax_group), lwd = 1.5) + 
+  #scale_fill_manual(values = alpha( c("#1F77B4", "#AEC7E8", "#FF7F0E", "#FFBB78", 
+  #                         "#2CA02C","#98DF8A", "#D62728", "#FF9896", 
+  #                             "#9467BD", "#C5B0D5", "#C49C94"), 0.6)) +
+  scale_y_continuous(name = "Number of Years") +
+  geom_point(data = all_data_dedup_gentime_full_longer_clean[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff", ],
+             aes(x = tax_group, y = time_years), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"),axis.title.x = element_blank())
+maxyear_by_tax_plot
 
 #### max_time by subject ####
 
@@ -558,6 +595,40 @@ maxtottime_by_subject_plot <- ggplot() +
         axis.text.y.right = element_text(size = 25, color = "#000000"), axis.title.y.left = element_text(size = 25, color = "#999999"),
         axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
 maxtottime_by_subject_plot
+
+maxgentime_by_subject_plot <- ggplot() +
+  geom_boxplot(data = maxgen_maxyear_all_subjects[maxgen_maxyear_all_subjects$measure_type == "max_gen_diff", ],
+               aes(x = subject, y = time_years, col = subject), lwd = 1.5) + 
+  #scale_color_manual(values = c("#999999", "#000000")) +
+  scale_color_manual(values = alpha( c("#1F77B4", "#FF7F0E", "#2CA02C", "#C5B0D5"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150)) +
+  geom_point(data = maxgen_maxyear_all_subjects[maxgen_maxyear_all_subjects$measure_type == "max_gen_diff", ],
+             aes(x = subject, y = time_years), 
+             alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1), axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"),
+        axis.title.x = element_blank())
+maxgentime_by_subject_plot
+
+maxyear_by_subject_plot <- ggplot() +
+  geom_boxplot(data = maxgen_maxyear_all_subjects[maxgen_maxyear_all_subjects$measure_type == "max_year_diff", ],
+               aes(x = subject, y = time_years, col = subject), lwd = 1.5) + 
+  #scale_color_manual(values = c("#999999", "#000000")) +
+  scale_color_manual(values = alpha( c("#1F77B4", "#FF7F0E", "#2CA02C", "#C5B0D5"), 0.6)) +
+  scale_y_continuous(name = "Number of Years", limits = c(0, 200)) +
+  geom_point(data = maxgen_maxyear_all_subjects[maxgen_maxyear_all_subjects$measure_type == "max_year_diff", ],
+             aes(x = subject, y = time_years), 
+             alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1), axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"),
+        axis.title.x = element_blank())
+maxyear_by_subject_plot
 
 #### max_time by driver ####
 
@@ -719,6 +790,40 @@ maxtottime_by_driver_plot <- ggplot() +
         axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
 maxtottime_by_driver_plot
 
+maxgentime_by_driver_plot <- ggplot() +
+  geom_boxplot(data = maxgen_maxyear_all_drivers[maxgen_maxyear_all_drivers$measure_type == "max_gen_diff", ],
+               aes(x = driver_process, y = time_years, col = driver_process), lwd = 1.5) + 
+  scale_color_manual(values = alpha( c("#1F77B4", "#AEC7E8", "#FF7F0E", "#FFBB78", 
+                                      "#2CA02C","#98DF8A", "#D62728", "#FF9896", 
+                                      "#9467BD"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150)) +
+  geom_point(data = maxgen_maxyear_all_drivers[maxgen_maxyear_all_drivers$measure_type == "max_gen_diff", ],
+             aes(x = driver_process, y = time_years, col = driver_process), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"),axis.title.x = element_blank())
+maxgentime_by_driver_plot
+
+maxyear_by_driver_plot <- ggplot() +
+  geom_boxplot(data = maxgen_maxyear_all_drivers[maxgen_maxyear_all_drivers$measure_type == "max_year_diff", ],
+               aes(x = driver_process, y = time_years, col = driver_process), lwd = 1.5) + 
+  scale_color_manual(values = alpha( c("#1F77B4", "#AEC7E8", "#FF7F0E", "#FFBB78", 
+                                       "#2CA02C","#98DF8A", "#D62728", "#FF9896", 
+                                       "#9467BD"), 0.6)) +
+  scale_y_continuous(name = "Number of Years", limits = c(0, 200)) +
+  geom_point(data = maxgen_maxyear_all_drivers[maxgen_maxyear_all_drivers$measure_type == "max_year_diff", ],
+             aes(x = driver_process, y = time_years, col = driver_process), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"),axis.title.x = element_blank())
+maxyear_by_driver_plot
+
 #### max_time by study_design ####
 
 #subset to only studies that have a study design
@@ -743,6 +848,36 @@ maxtottime_by_sd_plot <- ggplot() +
         axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
 maxtottime_by_sd_plot
 
+maxgentime_by_sd_plot <- ggplot() +
+  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean_nonasd[all_data_dedup_gentime_full_longer_clean_nonasd$measure_type == "max_gen_diff", ],
+               aes(x = study_design, y = time_years, col = study_design), lwd = 1.5) + 
+  scale_color_manual(values = alpha( c("#1F77B4", "#FF7F0E"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150)) +
+  geom_point(data = all_data_dedup_gentime_full_longer_clean_nonasd[all_data_dedup_gentime_full_longer_clean_nonasd$measure_type == "max_gen_diff", ],
+             aes(x = study_design, y = time_years, col = study_design), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"), axis.title.x = element_blank())
+maxgentime_by_sd_plot
+
+maxyear_by_sd_plot <- ggplot() +
+  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean_nonasd[all_data_dedup_gentime_full_longer_clean_nonasd$measure_type == "max_year_diff", ],
+               aes(x = study_design, y = time_years, col = study_design), lwd = 1.5) + 
+  scale_color_manual(values = alpha( c("#1F77B4", "#FF7F0E"), 0.6)) +
+  scale_y_continuous(name = "Number of Years", limits = c(0, 200)) +
+  geom_point(data = all_data_dedup_gentime_full_longer_clean_nonasd[all_data_dedup_gentime_full_longer_clean_nonasd$measure_type == "max_year_diff", ],
+             aes(x = study_design, y = time_years, col = study_design), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"), axis.title.x = element_blank())
+maxyear_by_sd_plot
+
 #### max_time by system ####
 
 #plot maxgt_by_system
@@ -763,6 +898,36 @@ maxtottime_by_system_plot <- ggplot() +
         axis.text.y.right = element_text(size = 25, color = "#000000"), axis.title.y.left = element_text(size = 25, color = "#999999"),
         axis.title.y.right = element_text(size = 25, color = "#000000"),axis.title.x = element_blank())
 maxtottime_by_system_plot
+
+maxgentime_by_system_plot <- ggplot() +
+  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff", ], 
+               aes(x = system, y = time_years, col = system), lwd = 1.5) + 
+  scale_color_manual(values = alpha( c("#1F77B4", "#FF7F0E", "#2CA02C", "#C5B0D5"), 0.6)) +
+  scale_y_continuous(name = "Number of Generations", limits = c(0, 150)) +
+  geom_point(data = all_data_dedup_gentime_full_longer_clean[all_data_dedup_gentime_full_longer_clean$measure_type == "max_gen_diff", ],
+             aes(x = system, y = time_years, col = system), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"),axis.title.x = element_blank())
+maxgentime_by_system_plot
+
+maxyear_by_system_plot <- ggplot() +
+  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff", ], 
+               aes(x = system, y = time_years, col = system), lwd = 1.5) + 
+  scale_color_manual(values = alpha( c("#1F77B4", "#FF7F0E", "#2CA02C", "#C5B0D5"), 0.6)) +
+  scale_y_continuous(name = "Number of Years", limits = c(0, 200)) +
+  geom_point(data = all_data_dedup_gentime_full_longer_clean[all_data_dedup_gentime_full_longer_clean$measure_type == "max_year_diff", ],
+             aes(x = system, y = time_years, col = system), alpha = 0.8) +
+  scale_pattern_fill_manual(values = c("#000000", NA)) +
+  theme(panel.grid.major = element_blank(), panel.border = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA), legend.position = "none",
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 25, color = "black"),
+        axis.title.y = element_text(size = 25, color = "black"),axis.title.x = element_blank())
+maxyear_by_system_plot
 
 ################################################################################################
 
@@ -852,12 +1017,13 @@ driver_by_subject$Ntot <- rowSums(driver_by_subject[, c("N11", "N12", "N13", "N1
                                                         "N21", "N22", "N23", "N24", 
                                                         "N31", "N32", "N33", "N34")], na.rm = TRUE)
   driver_by_subject <- driver_by_subject[driver_by_subject$subject != "", ] #remove rows where subject missing
-  driver_by_subject <- driver_by_subject[driver_by_subject$driver_process != "", ] #remove rows where driver_process missing
-  driver_by_subject <- driver_by_subject[1:32, ] #remove rows that weren't caught in previous two lines
-
+  #driver_by_subject <- driver_by_subject[driver_by_subject$driver_process != "", ] #remove rows where driver_process missing
+  driver_by_subject <- driver_by_subject[1:39, ] #remove rows that weren't caught in previous two lines
+    driver_by_subject <- driver_by_subject[-33, ] #WILL NEED TO CHECK THIS EACH TIME (WANT NAs LEFT)
+  
 #plot driver_by_subject
 driver_by_subject_plot <- ggplot(data = driver_by_subject, aes(x = subject, y = Ntot, fill = driver_process)) + 
-  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -887,7 +1053,7 @@ driver_by_sd$Ntot <- rowSums(driver_by_sd[, c("N1", "N2", "N3")], na.rm = TRUE)
 
 #plot driver_by_sd
 driver_by_sd_plot <- ggplot(data = driver_by_sd, aes(x = study_design, y = Ntot, fill = driver_process)) + 
-  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -944,12 +1110,12 @@ driver_by_system <- driver_by_system_list %>% reduce(full_join, by = c("system",
 
 #sum across columns to get total N driver_by_system
 driver_by_system$Ntot <- rowSums(driver_by_system[, c("N1", "N2", "N3")], na.rm = TRUE)
-driver_by_system <- driver_by_system[driver_by_system$driver_process != "", ] #remove rows where driver_process missing
-driver_by_system <- driver_by_system[-30, ] #remove row where driver_process still missing
+#driver_by_system <- driver_by_system[driver_by_system$driver_process != "", ] #remove rows where driver_process missing
+driver_by_system <- driver_by_system[-29, ] #remove row where driver_process still missing, CHECK EACH TIME (WANT NAs)
 
 #plot driver_by_system
 driver_by_system_plot <- ggplot(data = driver_by_system, aes(x = system, y = Ntot, fill = driver_process)) + 
-  geom_bar(position = "stack", stat = "identity", color = "black") + 
+  geom_bar(position = "fill", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -974,12 +1140,11 @@ driver_by_taxa <- driver_by_taxa_list %>% reduce(full_join, by = c("tax_group", 
 
 #sum across columns to get total N driver_by_taxa
 driver_by_taxa$Ntot <- rowSums(driver_by_taxa[, c("N1", "N2", "N3")], na.rm = TRUE)
-  driver_by_taxa <- driver_by_taxa[driver_by_taxa$driver_process != "", ] #remove rows where driver_process missing
-  driver_by_taxa <- driver_by_taxa[-58, ] #remove row where driver_process still missing
+  driver_by_taxa <- driver_by_taxa[driver_by_taxa$N1 != "", ] #remove rows where driver_process missing
 
 #plot driver_by_taxa
 driver_by_taxa_plot <- ggplot(data = driver_by_taxa, aes(x = reorder(tax_group, -Ntot), y = Ntot, fill = driver_process)) + 
-  geom_bar(position = "fill", stat = "identity", color = "black") + 
+  geom_bar(position = "stack", stat = "identity", color = "black") + 
   theme_minimal() + xlab("taxonomic group (class)") +
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
@@ -1022,7 +1187,7 @@ libprep_by_subject$Ntot <- rowSums(libprep_by_subject[, c("N1", "N2", "N3", "N4"
 
 #plot libprep_by_subject
 libprep_by_subject_plot <- ggplot(data = libprep_by_subject, aes(x = subject, y = Ntot, fill = lib_prep_method)) + 
-  geom_bar(position = "stack", stat = "identity", color = "black") + 
+  geom_bar(position = "fill", stat = "identity", color = "black") + 
   theme_minimal() + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 24, face = "bold"),
