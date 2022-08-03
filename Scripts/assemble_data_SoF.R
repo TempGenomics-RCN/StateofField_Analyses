@@ -55,22 +55,22 @@ all(names(adaptation_dt) == names(popsize_dt))
 
 #merge datasets together
 all_dt <- rbind(adaptation_dt, connectivity_dt, diversity_dt, popsize_dt)
-dim(all_dt) #501x40
+dim(all_dt) #525x40
 
 ##########################################################################################################################################
 
 ######## Clean newly merged dataset ########
 
 #remove studies that were rejected in "decision" column
-all_dt_accepted <- all_dt[Decision == "accept", ] #330x40 (171 studies from this list that got rejected)
+all_dt_accepted <- all_dt[Decision == "accept", ] #298x40 (227 studies from this list that got rejected)
 
 #remove studies that don't have "accept" in "removal_criteria" column
-all_dt_accepted <- all_dt_accepted[Removal_Criteria == "accept", ] #330 rows, shouldn't really remove any
+all_dt_accepted <- all_dt_accepted[Removal_Criteria == "accept", ] #298 rows, shouldn't really remove any
 
-#TEMP: trim to studies that have data
+#Check that all "accepted" studies have data
 #doing this on "system" column bc this should be recorded for every study/record
 all_dt_accepted <- all_dt_accepted[system != "", ] #bc not coded as "NA" but just left blank
-#dim: 230 rows (out of 330) --> 70% complete
+#dim: 298 rows (out of 298) --> 100% complete!!
 
 #split time period up into different columns
 #data.table version (much like separate() from tidyverse)
@@ -82,7 +82,7 @@ all_dt_accepted <- setDT(all_dt_accepted)[, paste0("TP_", 1:63) := tstrsplit(yea
 #split num samp up into different columns
 #should be same # added columns as with year_samp
 all_dt_accepted <- setDT(all_dt_accepted)[, paste0("NS_", 1:63) := tstrsplit(num_samp, ",")] #had to add 63 columns
-  dim(all_dt_accepted) #230x166 --> 63x2 + 40
+  dim(all_dt_accepted) #298x166 --> 63x2 + 40
 
 #split country samp up into different columns
 #remove white spaces first
@@ -110,13 +110,15 @@ systems <- sort(unique(all_dt_accepted$system)) #only 4 options --> good
 taxa <- sort(unique(all_dt_accepted$tax_group))
 
 #check rows with mistakes
-check <- all_dt_accepted[tax_group == "Teleostei", ]
+check <- all_dt_accepted[tax_group == "Actinopterygii", ]
 View(check)
   
 #fix taxa names where mis-spelled/misreported
 all_dt_accepted$tax_group[all_dt_accepted$tax_group == "\nMammalia"] <- "Mammalia" #get rid of carriage return character
 all_dt_accepted$tax_group[all_dt_accepted$tax_group == "Acidiacea"] <- "Ascidiacea" #fix typo
 all_dt_accepted$tax_group[all_dt_accepted$tax_group == "Teleostei"] <- "Actinopterygii" #Teleostei is infraclass in Actinopterygii
+all_dt_accepted$tax_group[all_dt_accepted$tax_group == "Chondrichthys"] <- "Chondrichthyes" #fix typo
+all_dt_accepted$tax_group[all_dt_accepted$tax_group == "Annelida"] <- "Polychaeta" #Annelida is phylum
 
 #check correct
 taxa <- sort(unique(all_dt_accepted$tax_group)) #good
@@ -138,11 +140,13 @@ countries <- sort(unique(c(all_dt_accepted$country_1, all_dt_accepted$country_2,
                            all_dt_accepted$country_37, all_dt_accepted$country_38, all_dt_accepted$country_39)))
 
 #check rows with mistakes
-check <- which(all_dt_accepted == "California", arr.ind = TRUE) #checking all columns (aka all country columns simultaneously) and recording indices
+check <- which(all_dt_accepted$country_samp == "Africa", arr.ind = TRUE) #checking all columns (aka all country columns simultaneously) and recording indices
 View(check)
-View(all_dt_accepted[74, ]) #row from check (column just informs which country column it is)
+View(all_dt_accepted[99, ]) #row from check (column just informs which country column it is)
 
 #fix country names where mis-spelled/incorrect
+all_dt_accepted$country_1[all_dt_accepted$country_1 == "Africa"] <- "SouthAfrica" #should be South Africa
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Africa"] <- "SouthAfrica"
 all_dt_accepted$country_1[all_dt_accepted$country_1 == "Australia(Tasmania)"] <- "Australia" #should just be Australia for consistency
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Australia(Tasmania)"] <- "Australia"
 all_dt_accepted$country_2[all_dt_accepted$country_2 == "BalticSea"] <- "NA" #should just be Estonia
@@ -195,6 +199,8 @@ all_dt_accepted$country_24[all_dt_accepted$country_24 == "Tunesia"] <- "Tunisia"
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Uzbekistan,Iran,China,Japan,Germany,Poland,CzechRepublic,Sweden,Lithuania,Latvia,Austria,Denmark,Finland,Italy,Morocco,Turkey,Croatia,Switzerland,Spain,France,Greece,Hungary,Macedonia,Tunesia,Slovenia,Portugal,Netherlands,,Lebanon,Belgium,Algeria,Syria,Romania,Bulgaria,Ukraine,Russia,Azerbaijan,Caucasus,Georgia"] <- "Uzbekistan,Iran,China,Japan,Germany,Poland,CzechRepublic,Sweden,Lithuania,Latvia,Austria,Denmark,Finland,Italy,Morocco,Turkey,Croatia,Switzerland,Spain,France,Greece,Hungary,Macedonia,Tunisia,Slovenia,Portugal,Netherlands,Lebanon,Belgium,Algeria,Syria,Romania,Bulgaria,Ukraine,Russia,Azerbaijan,Caucasus,Georgia"
 all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedKingdom"] <- "UK" #bc UK more common term
   all_dt_accepted$country_1[all_dt_accepted$country_1 == "UnitedKingdom"] <- "UK"
+  all_dt_accepted$country_4[all_dt_accepted$country_4 == "UnitedKingdom"] <- "UK"
+  all_dt_accepted$country_samp[all_dt_accepted$country_samp == "Sweden,Denmark,Netherlands,UnitedKingdom"] <- "Sweden,Denmark,Netherlands,UK"
 all_dt_accepted$country_1[all_dt_accepted$country_1 == "UnitedStates"] <- "USA" #bc USA more common term
   all_dt_accepted$country_2[all_dt_accepted$country_2 == "UnitedStates"] <- "USA"
   all_dt_accepted$country_samp[all_dt_accepted$country_samp == "UnitedStates"] <- "USA"
@@ -205,22 +211,22 @@ all_dt_accepted$country_4[all_dt_accepted$country_4 == "VirginIslands"] <- "NA" 
 all_dt_accepted$country_4[all_dt_accepted$country_4 == "Wales"] <- "NA" #change to NA bc England changed to UK
 
 #check rows with data missing --> at this point shouldn't be missing, everything should be marked as "NA" if data pulled and checked
-check <- all_dt_accepted[country_samp == ""] #checking all columns (aka all country columns simultaneously) and recording indices
+check <- all_dt_accepted[country_samp == ""] #checking all columns (aka all country columns simultaneously) and recording indices, 0 rows without country_samp, good
 check <- all_dt_accepted[country_samp == "NA"] #see if there are any that people couldn't find --> none, good
 
 #### Check loc_samp, year_samp & num_samp ####
 #check to make sure all studies have loc_samp
-noloc_check <- all_dt_accepted[loc_samp == ""] #12 rows without loc_samp
+noloc_check <- all_dt_accepted[loc_samp == ""] #0 rows without loc_samp, good
 
 #check to make sure all studies have year_samp
-noyear_check <- all_dt_accepted[year_samp == ""] #14 rows without year_samp
+noyear_check <- all_dt_accepted[year_samp == ""] #1 row without year_samp
 
 #check to make sure all studies have num_samp
-nonum_check <- all_dt_accepted[num_samp == ""] #15 rows without num_samp
+nonum_check <- all_dt_accepted[num_samp == ""] #1 row without num_samp
 
 #### Check gen length ####
 #check for studies without gen_time
-nogen_check <- all_dt_accepted[gen_time == ""] #7 rows without gen_time
+nogen_check <- all_dt_accepted[gen_time == ""] #1 row without gen_time
 
 #get list of generation times
 gen <- sort(unique(all_dt_accepted$gen_time))
@@ -230,17 +236,22 @@ check <- all_dt_accepted[gen_time == "730-1825", ]
 View(check)
 
 #fix gen time when necessary
-all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1095-1825"] <- 1460 #Taking average
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1,570"] <- 1570 #removed comma
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1095-1825"] <- 1460 #took average average
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1095-2920 (DOI: 10.2960/J.v25.a10)"] <- 2737.5 #Atlantic cod -- gen time is 7.5 yrs according to FishBase
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1095-3650"] <- 730 #Myotis lucifugus, gen time is 2 yrs (DOI:10.1093/jhered/esu012)
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1095 - 6205"] <- 3102.5 #average of 7-10 years, from Jacoby & Gollock (2014)
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1096-1461"] <- 1278.5 #took average
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "1135 (FishBase)"] <- 1153 #removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "12 (DOI: 10.1051/apido:2005016)"] <- 12 #removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "21 (see paper)"] <- 21 #removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "243-365 (fishbase)"] <- 304 #took average and removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "2739 (FishBase)"] <- 2739 #removed citation
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "292-730"] <- 511 #took average
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "3178-5734 (fishbase)"] <- 4456 #took average and removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "3215 - 4854.5"] <- 4034.5 #took average
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "36.5-182"] <- 109.25 #took average
+all_dt_accepted$gen_time[all_dt_accepted$gen_time == "365-1460 (fishbase)"] <- 912.5 #took average and removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "39-148"] <- 93.5 #took average
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "520 (Smith et al. 1996)"] <- 520 #removed citation
 all_dt_accepted$gen_time[all_dt_accepted$gen_time == "730 (Bauman and Metter, 1977)"] <- 730 #removed citation
@@ -250,19 +261,16 @@ all_dt_accepted$gen_time[all_dt_accepted$gen_time == "XX"] <- 3285 #European hak
 #check correct
 gen <- sort(unique(all_dt_accepted$gen_time)) #good
 
-#check NAs (later)
-na_gen <- which(is.na(all_dt_accepted$gen_time)) #14 rows where NA
-
 #### Check study design ####
 #check for studies without study design
-nosd_check <- all_dt_accepted[study_design == ""] #2 rows without study design
+nosd_check <- all_dt_accepted[study_design == ""] #0 rows without study_design, good
 
 #get list of study design
-st_design <- sort(unique(all_dt_accepted$study_design)) #only 2 options, good
+sd_design <- sort(unique(all_dt_accepted$study_design)) #only 2 options, good
 
 #### Check type change ####
 #check for studies without type change
-notc_check <- all_dt_accepted[type_change == ""] #4 rows without type change
+notc_check <- all_dt_accepted[type_change == ""] #0 rows without type change, good
 
 #get list of type change
 type <- sort(unique(all_dt_accepted$type_change)) #4 options
@@ -278,61 +286,61 @@ all_dt_accepted$type_change[all_dt_accepted$type_change == "natural, anthropogen
 
 #### Check driver of process ####
 #check for studies without driver process (only in first column)
-nodp_check <- all_dt_accepted[driver_process1 == ""] #33 rows without driver_process
+nodp_check <- all_dt_accepted[driver_process1 == " "] #0 rows without driver_process, good
 
 #get list of driver_process
 drive_process <- sort(unique(c(all_dt_accepted$driver_process1, all_dt_accepted$driver_process2, all_dt_accepted$driver_process3))) #9 options, good
                            
 #### Check length of process ####
 #check for studies without length process
-nolp_check <- all_dt_accepted[length_process == ""] #22 rows without length_process
+nolp_check <- all_dt_accepted[length_process == ""] #7 rows without length_process
 
 #get list of length_process
 length_process <- sort(unique(all_dt_accepted$length_process)) #2 options, good
 
 #### Check data type ####
 #check for studies without data type
-nodt_check <- all_dt_accepted[data_type == ""] #1 rows without data_type
+nodt_check <- all_dt_accepted[data_type == ""] #0 rows without data type, good
 
 #get list of data_type
-data_type <- sort(unique(all_dt_accepted$data_type)) #8 options
+data_type <- sort(unique(all_dt_accepted$data_type)) #7 options
 
 #changing STR rows to microsats
 all_dt_accepted$data_type[all_dt_accepted$data_type == "STR"] <- "microsat" #same thing
 
 #### Check tissue type ####
 #check for studies without tissue type
-nott_check <- all_dt_accepted[tissue_type == ""] #10 rows without tissue type
+nott_check <- all_dt_accepted[tissue_type == ""] #0 rows without tissue type, good
 
 #get list of tissue_type
-tissue_type <- sort(unique(all_dt_accepted$tissue_type)) #44 options which is fine
+tissue_type <- sort(unique(all_dt_accepted$tissue_type)) #50 options which is fine
 #will need to separate this column out & perhaps condense later but good enough now
 
 #### Check preservation method ####
 #check for studies without preservation method
-nopm_check <- all_dt_accepted[preserv_method == ""] #14 rows without preservation method
+nopm_check <- all_dt_accepted[preserv_method == ""] #1 rows without preservation method
 
 #get list of preserv_method
-preserv_method <- sort(unique(all_dt_accepted$preserv_method)) #16 options, good
+preserv_method <- sort(unique(all_dt_accepted$preserv_method)) #17 options, good
 #will need to separate this column out later but good enough for now
 
 #### Check extraction method ####
 #check for studies without extraction method
-noem_check <- all_dt_accepted[extract_method == ""] #6 rows without extraction method
+noem_check <- all_dt_accepted[extract_method == ""] #0 rows without extraction method, good
 
 #get list of extract_method
-extract_method <- sort(unique(all_dt_accepted$extract_method)) #111 options
+extract_method <- sort(unique(all_dt_accepted$extract_method)) #140 options
 #definitely needs to be condensed, will work on later
 
 #### Check sequence platform ####
 #check for  studies without sequence platform
-nosp_check <- all_dt_accepted[seq_platform == ""] #15 rows without sequence platform
+nosp_check <- all_dt_accepted[seq_platform == ""] #0 rows without sequence platform, good
 
 #get list of seq_platform
-seq_platform <- sort(unique(all_dt_accepted$seq_platform)) #35 options
+seq_platform <- sort(unique(all_dt_accepted$seq_platform)) #37 options
 
 #check rows with extra info
-check <- all_dt_accepted[seq_platform == "SNaPshot Multiplex SNP assay", ]
+check <- all_dt_accepted[seq_platform == "LightCycler", ]
 View(check)
 
 #fix seq platform as necessary
@@ -341,39 +349,45 @@ all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "ABI 3730 capillary
   all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Applied Biosystems 3730xl DNA Analyzer"] <- "Sanger"
   all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "ABI 3730 DNA automated sequencer"] <- "Sanger"
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "BioMark HD System)"] <- "Fluidigm BioMark HD" #per paper -- (Fluidigm Biomark 96.96 Dynamic Array) often used for single-cell genotyping/gene expression
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Cycle"] <- "cycle-sequencing" #same thing
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "First BASE"] <- "Sanger" #First BASE is sequencing facility in Malaysia that uses ABI sequencers (aka Sanger)
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Fluid Biomark HD System"] <- "Fluidigm BioMark HD"
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Fluidigm EP1 instrumentation"] <- "Fluidigm EP1" #different than BioMark HD but still commonly for gene expression
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Hitachi SQ-5500"] <- "Sanger" #slab gel electrophoresis (more labor-intensive than capillary but still essentially Sanger)
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Illumina-BeadXPress SNP assay"] <- "Illumina_BeadXpress" #format to match notation of other Illumina platforms
-  all_dt_accepted$seq_platofrm[all_dt_accepted$seq_platform == "Illumina_BeadXPress"] <- "Illumina_BeadXpress"
+  all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Illumina_BeadXPress"] <- "Illumina_BeadXpress"
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Illumina GoldenGate"] <- "Illumina_BeadXpress" #per paper, done at Roslin Institute (think mostGolden Gate assays there are with Illumina BeadXpress, not iScan...)
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Ion Protontm"] <- "Ion_Torrent" #typo & also Ion Proton is one of Ion Torrent's sequencers (other one is PGM)
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Li-Cor 4200 Global IR2"] <- "Sanger" #type of chain-termination & gel electrophoresis platform (Sanger)
+  all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Li-Cor 4200.4300 Global IR2"] <- "Sanger"
   all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "LI-COR IR2 two-dye"] <- "Sanger"
+all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "LightCycler"] <- "cycle-sequencing" #same thing
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "MegaBACE1000"] <- "Sanger" #automated DNA capillary sequencer
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "MJ Basestation Genetic Analyzer"] <- "Sanger" #automated DNA capillary sequencer
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Pharmacia ALFexpresss automatic sequencer"] <- "Sanger" #type of gel electorphoresis sequencer
+  all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "Pharmacia ALFexpress"] <- "Sanger" #type of gel electrophoresis sequencer
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "SEQ 8000 Automatic DNA Analyser"] <- "Sanger" #automated DNA capillary sequencer
 all_dt_accepted$seq_platform[all_dt_accepted$seq_platform == "SNaPshot Multiplex SNP assay"] <- "Sanger" #SNP assay but designed to be run on any ABI (capillary/Sanger sequencer) system, which would be the sequencing platform
  
 #### Check library prep method ####
 #check for studies without lib prep
-nolp_check <- all_dt_accepted[lib_prep_method == ""] #4 rows without lib prep
+nolp_check <- all_dt_accepted[lib_prep_method == ""] #0 rows without lib prep, good
 
 #get list of lib_prep
-lib_prep <- sort(unique(all_dt_accepted$lib_prep_method)) #12 options --> too many
+lib_prep <- sort(unique(all_dt_accepted$lib_prep_method)) #14 options --> too many
 
 #check rows with extra info
-check <- all_dt_accepted[lib_prep_method == "DArTseq", ]
+check <- all_dt_accepted[lib_prep_method == "Taqman", ]
 View(check)
 
 #fix lib prep when necessary
 all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "Meyer & Kircher 2010"] <- "Targeted_sequence_capture" #Meyer & Kircher 2010 is targeted sequence capture (exon)
 all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "RAPTURE"] <- "Targeted_sequence_capture" #RAPTURE == targeted sequence capture (of RAD sites)
 all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "GBS"] <- "SNP_array" #pulled from paper methods cited
+all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "genotype-by-sequencing"] <- "Genotype_by_sequencing" #same thing
 all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "Bead_array"] <- "SNP_array" #to simplify
   all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "DArTseq"] <- "SNP_array"
+  all_dt_accepted$lib_prep_method[all_dt_accepted$lib_prep_method == "Taqman"] <- "SNP_array"
 
 #########################################################################################################################################
 
