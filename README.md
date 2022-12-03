@@ -12,5 +12,5 @@ This repository is organized into 5 directories:
 
 Please contact René at rene.clark[at]rutgers.edu with any questions.
 
-*Also available to download as a zip archive from Zenodo.* 
+*Also available to download as a zip archive from Zenodo.*      
 [![DOI](https://zenodo.org/badge/428362953.svg)](https://zenodo.org/badge/latestdoi/428362953)
