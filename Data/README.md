@@ -2,12 +2,14 @@
 
 All other files contains source & raw data read into R scripts for cleaning.
 
+
 Raw data (*.xlsx* files) are in the sub-directory **Original_Excel**. These files are where data were directly recorded. Source data read into R for data cleaning are in *.csv* files.
   * NOTE: In these spreadsheets, studies are assigned to rows. If a study had more than one unique study design (e.g., looked at multiple kinds of markers or organisms) each unique study design was given an additional row. Thus, one study could have more than one row.
 
 The only difference between the raw and source data files are as follows:
 1. Source data contains only the first 43 columns.
 2. Source data contains only the rows with empirical studies where the **subject_1** column is the same subject as name of the source data file (e.g. "adaptation" for `adaptation.csv`).
+
 
 All files (except `Secondary_Filtered_Database.xlsx` contain the following information in each column (for more information, look at `Filtering_Steps\Database_Guidelines.md`):
 1. **Article Number:** The number of the article in the `Secondary_filtered_Database.xlsx`
