@@ -11,7 +11,7 @@ The only difference between the raw and source data files are as follows:
 2. Source data contains only the rows with empirical studies where the **subject_1** column is the same subject as name of the source data file (e.g. "adaptation" for `adaptation.csv`).
 
 
-All files (except `Secondary_Filtered_Database.xlsx` contain the following information in each column (for more information, look at `Filtering_Steps\Database_Guidelines.md`):
+All files (except `Secondary_Filtered_Database.xlsx` contain the following information in each column (for more information, look at `Filtering_Steps\Database_Guidelines.docx`):
 1. **Article Number:** The number of the article in the `Secondary_filtered_Database.xlsx`
 2. **Second_Filter_Flag:** A flag indicating the order in which the study was reviewed during title/abstract filtering. 'Review later' means the study was originally flagged as likely being outside of the scope of our study and was in the last set of articles to be filtered by hand.
 3. **Article_Title:** The title of the study.
