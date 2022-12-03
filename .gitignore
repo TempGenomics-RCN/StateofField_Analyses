@@ -1,0 +1,20 @@
+#R project data to ignore
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj*
+
+#pptx for presentations to ignore
+SoF_PP.pptx
+
+#supplemental data to ignore (in manuscript as supplemental data)
+supp_papersused.docx
+Output/all_tempgen_data_references.xlsx
+
+#ignore bc content included in spreadsheets (num_timepoints, earliest_timepoint, latest_timepoint)
+Output/temporal_sampling_regime.xlsx
+
+#temp files to ignore
+~*.docx
+~*.tmp
