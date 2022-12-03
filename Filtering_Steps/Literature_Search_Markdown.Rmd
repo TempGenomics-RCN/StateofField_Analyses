@@ -1,0 +1,202 @@
+---
+title: "<center> Temporal Genomics Working Group <center> "
+author: "<center> Anthony Snead <center> "
+date: "<center> _`r Sys.Date()`_ <center>"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(eval = FALSE, echo=TRUE, warning=FALSE, message=FALSE)
+knitr.duplicate.label = "allow"
+```
+
+```{r, Libraries}
+library(tidyverse)
+library(dplyr)
+library(stringr)
+```
+
+# Filtering Reference List
+
+##Import Reference List
+Files were downloaded from Web of Science as text files. The below code imports the text files as a dataframe and saves the keyword used to retreive each paper as a new column by extracting it from the file name. 
+```{r, Importing}
+
+file_names <- list.files(path="C:/Users/antho/OneDrive - The University of Alabama/Temporal Genomics WKGRP/archive/", full.names = FALSE)
+#getting all the files names for each text file
+
+DB <- list.files(path="C:/Users/antho/OneDrive - The University of Alabama/Temporal Genomics WKGRP/archive/", full.names = TRUE) %>% 
+  #get list of csv paths
+  lapply(., read_delim,delim = "\t", escape_double = FALSE, col_names = c("Publication_Type",
+                                               "Authors",
+                                               "Book_Authors",
+                                               "Book_Editors",
+                                               "Book_Group_Authors",
+                                               "Author_Full_Names",
+                                               "Book_Author_Full_Names",
+                                               "Group_Authors",
+                                               "Article_Title",
+                                               "Source_Title",
+                                               "Book_Series_Title",
+                                               "Book_Series_Subtitle",
+                                               "Language",
+                                               "Document_Type",
+                                               "Conference_Title",
+                                               "Conference_Date",
+                                               "Conference_Location",
+                                               "Conference_Sponsor",
+                                               "Conference_Host",
+                                               "Author_Keywords",
+                                               "Keywords_Plus",
+                                               "Abstract",
+                                               "Addresses",
+                                               "Reprint_Addresses",
+                                               "Email_Addresses",
+                                               "Researcher_Ids",
+                                               "ORCIDs",
+                                               "Funding_Orgs",
+                                               "Funding_Text",
+                                               "Cited_References",
+                                               "Cited_Reference_Count",
+                                               "Times_Cited_WoS_Core",
+                                               "Times_Cited_All_Databases",
+                                               "180_Day_Usage_Count",
+                                               "Since_2013_Usage_Count",
+                                               "Publisher",
+                                               "Publisher_City",
+                                               "Publisher_Address",
+                                               "ISSN",
+                                               "eISSN",
+                                               "ISBN",
+                                               "Journal_Abbreviation",
+                                               "Journal_ISO_Abbreviation",
+                                               "Publication_Date",
+                                               "Publication_Year",
+                                               "Volume",
+                                               "Issue",
+                                               "Part_Number",
+                                               "Supplement",
+                                               "Special_Issue",
+                                               "Meeting_Abstract",
+                                               "Start_Page",
+                                               "End_Page",
+                                               "Article_Number",
+                                               "DOI",
+                                               "Book_DOI",
+                                               "Early_Access_Date",
+                                               "Number_of_Pages",
+                                               "WoS_Categories",
+                                               "Research_Areas",
+                                               "IDS_Number",
+                                               "Unique_WOS_ID",
+                                               "Pubmed_Id",
+                                               "Open_Access_Designations",
+                                               "Highly_Cited_Status",
+                                               "Hot_Paper_Status",
+                                               "Date_of_Export"),
+         col_types = cols(Publication_Type = col_character(),
+                                               Authors = col_character(),
+                                               Book_Authors  = col_character(),
+                                               Book_Editors  = col_character(),
+                                               Book_Group_Authors = col_character(),
+                                               Author_Full_Names = col_character(),
+                                               Book_Author_Full_Names = col_character(),
+                                               Group_Authors = col_character(),
+                                               Article_Title = col_character(),
+                                               Source_Title = col_character(),
+                                               Book_Series_Title = col_character(),
+                                               Book_Series_Subtitle = col_character(),
+                                               Language = col_character(),
+                                               Document_Type = col_character(),
+                                               Conference_Title = col_character(),
+                                               Conference_Date = col_character(),
+                                               Conference_Location = col_character(),
+                                               Conference_Sponsor = col_character(),
+                                               Conference_Host = col_character(),
+                                               Author_Keywords = col_character(),
+                                               Keywords_Plus = col_character(),
+                                               Abstract = col_character(),
+                                               Addresses = col_character(),
+                                               Reprint_Addresses = col_character(),
+                                               Email_Addresses  = col_character(),
+                                               Researcher_Ids  = col_character(),
+                                               ORCIDs  = col_character(),
+                                               Funding_Orgs = col_character(),
+                                               Funding_Text = col_character(),
+                                               Cited_References = col_double(),
+                                               Cited_Reference_Count = col_double(),
+                                               Times_Cited_WoS_Core = col_double(),
+                                               Times_Cited_All_Databases = col_double(),
+                                               "180_Day_Usage_Count" = col_double(),
+                                               Since_2013_Usage_Count = col_double(),
+                                               Publisher = col_character(),
+                                               Publisher_City = col_character(),
+                                               Publisher_Address = col_character(),
+                                               ISSN = col_character(),
+                                               eISSN = col_character(),
+                                               ISBN = col_character(),
+                                               Journal_Abbreviation = col_character(),
+                                               Journal_ISO_Abbreviation = col_character(),
+                                               Publication_Date = col_character(),
+                                               Publication_Year = col_double(),
+                                               Volume = col_double(),
+                                               Issue = col_double(),
+                                               Part_Number = col_character(),
+                                               Supplement = col_character(),
+                                               Special_Issue = col_character(),
+                                               Meeting_Abstract = col_character(),
+                                               Start_Page = col_double(),
+                                               End_Page = col_double(),
+                                               Article_Number = col_double(),
+                                               DOI = col_character(),
+                                               Book_DOI = col_character(),
+                                               Early_Access_Date = col_character(),
+                                               Number_of_Pages = col_double(),
+                                               WoS_Categories = col_character(),
+                                               Research_Areas = col_character(),
+                                               IDS_Number = col_character(),
+                                               Unique_WOS_ID = col_character(),
+                                               Pubmed_Id = col_character(),
+                                               Open_Access_Designations = col_character(),
+                                               Highly_Cited_Status = col_character(),
+                                               Hot_Paper_Status = col_character(),
+                                               Date_of_Export = col_character()),
+    trim_ws = TRUE, skip = 1 ) 
+#importing the references as a list of data frames with the files name as the element name
+
+for(i in 1:144){
+  DB[[i]]$Keyword_Search <- sub("\\_.*", "", file_names[i])
+}
+# get colum, of keyword used in the search from the element name
+```
+
+##Filtering the Reference List
+
+We first bind all the list elements together and get rid of duplicate articles. We then filter by various components to try and meet the filtering guidelines established in the review paper. Not all papers that are not applicable are fitlered out. Therefore, we still did a manual filtering by reading the title and abstract of each paper. 
+
+```{r, Filtering}
+Filtered_Data_Base <- DB %>%
+  #start wit dataset
+  bind_rows %>%
+  #combine
+  distinct(Authors, Article_Title, .keep_all = TRUE) %>%
+  #remove duplicates
+  dplyr::filter(Publication_Type == "J" & Language == "English") %>%
+  #filer by language and publication type
+  dplyr::filter(stringr::str_detect(Research_Areas, "Evolution|Genetic|Biodiversity|Ecology|Conservation|Marine|Freshwater|Zoology|Fisheries|Entomology|Oceanography|Genomic")
+                & (Document_Type == "Article"|
+                     Document_Type == "Review")) %>%
+  #keep if te research area has any of these words
+  dplyr::filter(!stringr::str_detect(Research_Areas, ("Agriculture|Anthropology|Archaeology|Sociology|Psychology|Microbiology|Plant|Veterinary|Forestry|Immunology|Oncology|Medicine|Obstetrics|Ophthalmology|Cell|Toxicology|Mycology|Psychiatry|Anatomy|Chemistry|physics|Paleontology|Physiology|Endocrinology|Engineering|Neurosciences|Reproductive|Energy|Cardiology|Public|Developmental| Virology"))
+                & !stringr::str_detect(Source_Title , ("HUMAN|MEDICAL|FORENSIC|CLINICAL")) 
+                & !stringr::str_detect(WoS_Categories, ("Clinical|Geosciences"))
+                &!stringr::str_detect(Author_Keywords, ("paleo|Paleo|Anthropology|anthropology|medicine|Medicine|bacteria|Bacteria|virus|Virus|virology|Virology|archaeology|Archaeo|microsat|Microsat|allozy|Allozy|Diet|diet|Feeding|feeding|plant|trophic|Trophic|human|Human|Forest|forest|Domestic|domestic|agricult|Agricult"))
+                & !stringr::str_detect(Article_Title, ("Domestic|domestic|homo|Homo|Neanderthal|neanderthal|Archeolo|archeolo|archaeo|Archaeo|Environmental DNA|environmental DNA|eDNA|Neolithic|neolithic|Pleisto|pleisto|Palaeo|Paleo|palaeo|paleo|medieval|Tribe|tribe|tribal|Tribal|mummy|human|Human|Cattle|cattle|Sheep|sheep|fossil|Fossil|Chloroplast|chloroplast|Plant|plant|Pre-quaternary|microb|Microb|farm|Farm|agriculture|Agriculture|Cancer|cancer|microsat|Microsat|allozym|Allozym|STR|sediment|Sediment|epigenetic|Epigenetic|methylation|Methylation"))
+                &!stringr::str_detect(Keywords_Plus,("HUMAN|CATTLE|AGRICULTURE|FARM|DOMESTIC|CHLOROPLAST|DIET|BACTERIA|VIRUS"))) %>%
+  #Remove entries which have these strings. I Did this by looking at the datas heet to evaluate the possible words which were used. Therefore, the word choice is not systematic but the subjects are. I just got rid of domesticated, human, microsats, allozyme,medical, plats, eDNA, microbiology, and epigenetic studies. 
+  dplyr::filter(Publication_Year >= 2000 & !is.na(Publication_Year)) %>%
+#filter by publication year
+  dplyr::select(Article_Title, Authors, Abstract,Email_Addresses, Publication_Year, DOI, Source_Title, Keyword_Search )
+
+```
