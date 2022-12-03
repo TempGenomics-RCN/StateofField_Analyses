@@ -17,6 +17,7 @@ library(data.table)
 library(tidyverse)
 library(ggpattern)
 library(gridExtra)
+library(cowplot)
 
 #read in data
 all_data <- fread(here("Output", "all_tempgen_data.csv"))
@@ -24,7 +25,7 @@ all_data <- fread(here("Output", "all_tempgen_data.csv"))
 #create non-duplicated dataset
 #some studies have multiple rows (bc looked at more than one species, marker type, etc)
 #don't want to double count these
-all_data_deduplicate <- all_data[!duplicated(all_data$Article_Number), ] #down from 293 to 218 rows
+all_data_deduplicate <- all_data[!duplicated(all_data$Article_Number), ] #down from 282 to 218 rows
 
 ##########################################################################################################################################
 
@@ -49,20 +50,6 @@ subject <- subject_list %>% reduce(full_join, by = c("subject"), all = TRUE)
 #sum across columns to get total N subject_by_year
 subject$Ntot <- rowSums(subject[, c("N1", "N2", "N3", "N4")], na.rm = TRUE)
   subject <- subject[-5, ] #remove last row
-
-##simplified subject distribution (for paper figure)
-subject_common_plot <- ggplot(data = subject, aes(x = reorder(subject, -Ntot), y = Ntot)) + 
-  geom_bar(stat = "identity", color = "grey", fill = "grey") + 
-  geom_text(data = NULL, x = 0.68, y = 155, label = "A", size = 50) + 
-  theme_minimal() + xlab("Subject") + ylab("N") +
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 110),
-        axis.text = element_text(size = 90, color = "black"), 
-        axis.text.x = element_text(angle = 315, hjust = 0))
-subject_common_plot
-
-Fig2_subj_driv_plot <- grid.arrange(subject_common_plot, driver_plot, ncol = 1)
-
 
 #### subject by publication year ####
 #using deduplicated since interested in subject of publication -- don't want to inflate with multiple studies in a publication
@@ -411,134 +398,29 @@ gt_by_tax_plot
 ################################################################################################
 
 ######## Max year & gentime data exploration ########
-#NOT "usual" deduplicated bc different studies have different species (w/diff generation times)
 
-#### get max length of study in # gens ####
-#pivoting to get gen time estimates (length of study in # generations)
-#pivot longer and put all time points (expect for first one) in own row for each study
-all_data_dedup_gentime_long <- as.data.table(pivot_longer(data = all_data_dedup_gentime,
-                                            cols = TP_2:TP_63,
-                                            names_to = "time_point",
-                                            values_to = "date"))
+#NOT "usual" deduplicated bc same study may have different organisms with different time points OR temporal sampling scheme
 
-#calculate diff (in days) between TP 1 and each subsequent TP in a study (now in date column)
-#have to use absolute value bc not everyone recorded sampling dates in same order
-#NOTE: this might not be totally accurate --- some studies don't sample all sites at earliest & latest time point...
-#should be a good approximation though?
-all_data_dedup_gentime_long[, day_diff := abs(as.Date(all_data_dedup_gentime_long$TP_1, format = "%Y.%m.%d") - 
-                                  as.Date(all_data_dedup_gentime_long$date, format = "%Y.%m.%d"))]
+#removing rows if have same Article_Number (same publication) and same earliest time point, latest time point, and gen time
+all_data_dedup_time <- distinct(all_data, Article_Number, earliest_timepoint, latest_timepoint, gen_time, .keep_all = TRUE)
 
-#convert to # days btwn time points to # generations
-all_data_dedup_gentime_long[, gen_diff := all_data_dedup_gentime_long$day_diff/all_data_dedup_gentime_long$gen_time]
+## Calculate max number of years & generations ##
+#calculate diff (in days) between earliest and latest timepoint
+#using absolute values just in case columns accidentally switched
+all_data_dedup_time[, day_diff := abs(as.Date(all_data_dedup_time$latest_timepoint, format = "%Y.%m.%d") - 
+                                        as.Date(all_data_dedup_time$earliest_timepoint, format = "%Y.%m.%d"))]
 
-#remove date columns (will otherwise screw up conversion back to wide format)
-all_data_dedup_gentime_long[, date := NULL]
+#convert # days btwn timepoints to # generations
+all_data_dedup_time[, gen_diff := all_data_dedup_time$day_diff/all_data_dedup_time$gen_time]
 
-#convert back to wide format
-#now, number of generations from TP_1 is in TP_2, etc. columns
-all_data_dedup_gentime_long_nodaydiff <- all_data_dedup_gentime_long[, !"day_diff"] #remove day_diff (otherwise screw up conversion)
-all_data_dedup_gentime_wide <- as.data.table(pivot_wider(data = all_data_dedup_gentime_long_nodaydiff,
-                                           names_from = "time_point",
-                                           values_from = "gen_diff"))
-
-#grab maximum gen_diff and put in own column
-all_data_dedup_gentime_wide$max_gen_diff <- pmax(all_data_dedup_gentime_wide$TP_2, all_data_dedup_gentime_wide$TP_3, all_data_dedup_gentime_wide$TP_4, 
-                                   all_data_dedup_gentime_wide$TP_5, all_data_dedup_gentime_wide$TP_6, all_data_dedup_gentime_wide$TP_7,
-                                   all_data_dedup_gentime_wide$TP_8, all_data_dedup_gentime_wide$TP_9, all_data_dedup_gentime_wide$TP_10, 
-                                   all_data_dedup_gentime_wide$TP_11, all_data_dedup_gentime_wide$TP_12, all_data_dedup_gentime_wide$TP_13, 
-                                   all_data_dedup_gentime_wide$TP_14, all_data_dedup_gentime_wide$TP_15, all_data_dedup_gentime_wide$TP_16,
-                                   all_data_dedup_gentime_wide$TP_17, all_data_dedup_gentime_wide$TP_18, all_data_dedup_gentime_wide$TP_19,
-                                   all_data_dedup_gentime_wide$TP_20, all_data_dedup_gentime_wide$TP_21, all_data_dedup_gentime_wide$TP_22, 
-                                   all_data_dedup_gentime_wide$TP_23, all_data_dedup_gentime_wide$TP_24, all_data_dedup_gentime_wide$TP_25,
-                                   all_data_dedup_gentime_wide$TP_26, all_data_dedup_gentime_wide$TP_27, all_data_dedup_gentime_wide$TP_28,
-                                   all_data_dedup_gentime_wide$TP_29, all_data_dedup_gentime_wide$TP_30, all_data_dedup_gentime_wide$TP_31, 
-                                   all_data_dedup_gentime_wide$TP_32, all_data_dedup_gentime_wide$TP_33, all_data_dedup_gentime_wide$TP_34,
-                                   all_data_dedup_gentime_wide$TP_35, all_data_dedup_gentime_wide$TP_36, all_data_dedup_gentime_wide$TP_37,
-                                   all_data_dedup_gentime_wide$TP_38, all_data_dedup_gentime_wide$TP_39, all_data_dedup_gentime_wide$TP_40, 
-                                   all_data_dedup_gentime_wide$TP_41, all_data_dedup_gentime_wide$TP_42, all_data_dedup_gentime_wide$TP_43,
-                                   all_data_dedup_gentime_wide$TP_44, all_data_dedup_gentime_wide$TP_45, all_data_dedup_gentime_wide$TP_46,
-                                   all_data_dedup_gentime_wide$TP_47, all_data_dedup_gentime_wide$TP_48, all_data_dedup_gentime_wide$TP_49, 
-                                   all_data_dedup_gentime_wide$TP_50, all_data_dedup_gentime_wide$TP_51, all_data_dedup_gentime_wide$TP_52,
-                                   all_data_dedup_gentime_wide$TP_53, all_data_dedup_gentime_wide$TP_54, all_data_dedup_gentime_wide$TP_55,
-                                   all_data_dedup_gentime_wide$TP_56, all_data_dedup_gentime_wide$TP_57, all_data_dedup_gentime_wide$TP_58,
-                                   all_data_dedup_gentime_wide$TP_59, all_data_dedup_gentime_wide$TP_60, all_data_dedup_gentime_wide$TP_61,
-                                   all_data_dedup_gentime_wide$TP_62, all_data_dedup_gentime_wide$TP_63, na.rm = TRUE)
-
-#remove excess columns
-cols.to.del <- c("TP_2", "TP_3", "TP_4", "TP_5", "TP_6", "TP_7", "TP_8", "TP_9", "TP_10", "TP_11",
-                 "TP_12", "TP_13", "TP_14", "TP_15", "TP_16", "TP_17", "TP_18", "TP_19", "TP_20", "TP_21",
-                 "TP_22", "TP_23", "TP_24", "TP_25", "TP_26", "TP_27", "TP_28", "TP_29", "TP_30", "TP_31",
-                 "TP_32", "TP_33", "TP_34", "TP_35", "TP_36", "TP_37", "TP_38", "TP_39", "TP_40", "TP_41",
-                 "TP_42", "TP_43", "TP_44", "TP_45", "TP_46", "TP_47", "TP_48", "TP_49", "TP_50", "TP_51",
-                 "TP_52", "TP_53", "TP_54", "TP_55", "TP_56", "TP_57", "TP_58", "TP_59", "TP_60", "TP_61", 
-                 "TP_62", "TP_63")
-all_data_dedup_gentime_wide[, (cols.to.del) := NULL]
-dim(all_data_dedup_gentime_wide) #check 239 x 145
-
-#### get max length of study in # years ####
-#starting from all_data_dedup_gentime_wide dataset
-
-#convert back to wide format
-#now, # of DAYS from TP_1 is in TP_2, etc. columns
-all_data_dedup_time_long <- all_data_dedup_gentime_long[, !"gen_diff"] #remove gen_diff (otherwise screw up conversion)
-all_data_dedup_time_wide <- as.data.table(pivot_wider(data = all_data_dedup_time_long,
-                                                         names_from = "time_point",
-                                                         values_from = "day_diff"))
-
-#grab maximum day_diff and put in own column
-all_data_dedup_time_wide$max_day_diff <- pmax(all_data_dedup_time_wide$TP_2, all_data_dedup_time_wide$TP_3, all_data_dedup_time_wide$TP_4, 
-                                                 all_data_dedup_time_wide$TP_5, all_data_dedup_time_wide$TP_6, all_data_dedup_time_wide$TP_7,
-                                                 all_data_dedup_time_wide$TP_8, all_data_dedup_time_wide$TP_9, all_data_dedup_time_wide$TP_10, 
-                                                 all_data_dedup_time_wide$TP_11, all_data_dedup_time_wide$TP_12, all_data_dedup_time_wide$TP_13, 
-                                                 all_data_dedup_time_wide$TP_14, all_data_dedup_time_wide$TP_15, all_data_dedup_time_wide$TP_16,
-                                                 all_data_dedup_time_wide$TP_17, all_data_dedup_time_wide$TP_18, all_data_dedup_time_wide$TP_19,
-                                                 all_data_dedup_time_wide$TP_20, all_data_dedup_time_wide$TP_21, all_data_dedup_time_wide$TP_22, 
-                                                 all_data_dedup_time_wide$TP_23, all_data_dedup_time_wide$TP_24, all_data_dedup_time_wide$TP_25,
-                                                 all_data_dedup_time_wide$TP_26, all_data_dedup_time_wide$TP_27, all_data_dedup_time_wide$TP_28,
-                                                 all_data_dedup_time_wide$TP_29, all_data_dedup_time_wide$TP_30, all_data_dedup_time_wide$TP_31, 
-                                                 all_data_dedup_time_wide$TP_32, all_data_dedup_time_wide$TP_33, all_data_dedup_time_wide$TP_34,
-                                                 all_data_dedup_time_wide$TP_35, all_data_dedup_time_wide$TP_36, all_data_dedup_time_wide$TP_37,
-                                                 all_data_dedup_time_wide$TP_38, all_data_dedup_time_wide$TP_39, all_data_dedup_time_wide$TP_40, 
-                                                 all_data_dedup_time_wide$TP_41, all_data_dedup_time_wide$TP_42, all_data_dedup_time_wide$TP_43,
-                                                 all_data_dedup_time_wide$TP_44, all_data_dedup_time_wide$TP_45, all_data_dedup_time_wide$TP_46,
-                                                 all_data_dedup_time_wide$TP_47, all_data_dedup_time_wide$TP_48, all_data_dedup_time_wide$TP_49, 
-                                                 all_data_dedup_time_wide$TP_50, all_data_dedup_time_wide$TP_51, all_data_dedup_time_wide$TP_52,
-                                                 all_data_dedup_time_wide$TP_53, all_data_dedup_time_wide$TP_54, all_data_dedup_time_wide$TP_55,
-                                                 all_data_dedup_time_wide$TP_56, all_data_dedup_time_wide$TP_57, all_data_dedup_time_wide$TP_58,
-                                                 all_data_dedup_time_wide$TP_59, all_data_dedup_time_wide$TP_60, all_data_dedup_time_wide$TP_61,
-                                                 all_data_dedup_time_wide$TP_62, all_data_dedup_time_wide$TP_63, na.rm = TRUE)
-
-#remove excess columns
-all_data_dedup_time_wide[, (cols.to.del) := NULL] #deleting same cols as from max_gentime dataframe
-dim(all_data_dedup_time_wide) #check -- should be same as all_data_dedup_gentime_wide dimensions (yes)
-
-#convert days to years (for ease of interpretation)
-all_data_dedup_time_wide$max_year_diff <- all_data_dedup_time_wide$max_day_diff/365
-
-#### merge max_gentime & time datasets ####
-all_data_dedup_gentime_full <- cbind(all_data_dedup_gentime_wide, max_day_diff = all_data_dedup_time_wide$max_day_diff)
-  all_data_dedup_gentime_full$max_year_diff <- all_data_dedup_gentime_full$max_day_diff/365
-  
-#write out and read in if running separately
-#write.csv(all_data_dedup_gentime_full, "Output/all_data_dedup_gentime_full.csv")
-#all_data_dedup_gentime_full <- fread(here("Output", "all_data_dedup_gentime_full.csv"))
-
-#reformat longer to put values in the same column
-all_data_dedup_gentime_full_longer <- all_data_dedup_gentime_full%>%
-  pivot_longer(cols = c(max_gen_diff, max_year_diff),
-               names_to = "measure_type",
-               values_to = "time_years")
-
-#clean up --> removing Amphipoda & Branchipoda for now because no data for them (?)
-all_data_dedup_gentime_full_longer_clean <-all_data_dedup_gentime_full_longer %>%
-  filter(tax_group != "Amphipoda") %>%
-  filter(tax_group != "Branchiopoda")
+#convert # days btwn timepoints to # years
+all_data_dedup_time[, year_diff := all_data_dedup_time$day_diff/365]
 
 #### max_time by taxa ####
 
 #plot tax distribution
 maxtottime_by_tax_plot <- ggplot() +
-  geom_boxplot(data = all_data_dedup_gentime_full_longer_clean,
+  geom_boxplot(data = all_data_dedup_time,
                aes(x = tax_group, y = time_years, fill = tax_group, col = measure_type), lwd = 1.5) + 
   scale_color_manual(values = c("#999999", "#000000")) +
   #scale_fill_manual(values = alpha( c("#1F77B4", "#AEC7E8", "#FF7F0E", "#FFBB78", 
@@ -1093,48 +975,6 @@ num_drivers <- num_drivers_list %>% reduce(full_join, by = "driver_process", all
   
 #sum across columns to get total N drivers
 num_drivers$Ntot <- rowSums(num_drivers[, c("N1", "N2", "N3")], na.rm = TRUE)
-
-#plot driver_dist
-driver_plot <- ggplot(data = num_drivers, aes(x = reorder(driver_process, -Ntot), y = Ntot, fill = driver_process)) + 
-  geom_bar(stat = "identity", color = "black") + 
-  scale_fill_manual(values = c("#332288", "#117733", "#44AA99", "#88CCEE", "#DDCC77", "#CC6677", "#AA4499", "#882255"), 
-                    labels = c("climate change", "competition", "disease", "env variation", "habitat loss", "human exploitation", 
-                               "invasive species", "natural disaster", "NA")) + 
-  scale_x_discrete(labels = c("habitat loss", "env variation", "human exploitation", "invasive species", "climate change", 
-                              "disease", "competition", "natural disaster", "NA")) + 
-  theme_minimal() + xlab("Driver of Change") + labs(fill = "Driver of Change") + 
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 60, face = "bold"),
-        axis.text = element_text(size = 55), legend.position = "top", 
-        axis.text.x = element_text(angle = 315, hjust = 0),
-        legend.title = element_blank(), legend.text = element_text(size = 48))
-driver_plot
-
-#plot driver_dist for paper fig
-driver_plot <- ggplot(data = num_drivers, aes(x = reorder(driver_process, -Ntot), y = Ntot)) + 
-  geom_bar(stat = "identity", color = "grey", fill = "grey") + 
-  scale_x_discrete(labels = c("habitat loss", "env variation", "human exploitation", "invasive species", "climate change", 
-                              "disease", "competition", "natural disaster", "NA")) + 
-  geom_text(data = NULL, x = 0.68, y = 65, label = "B", size = 50) + 
-  theme_minimal() + xlab("Driver of Change") + ylab("N") + 
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 110),
-        axis.text = element_text(size = 90, color = "black"), legend.position = "top", 
-        axis.text.x = element_text(angle = 315, hjust = 0))
-driver_plot
-
-Fig2_subj_driv_plot <- grid.arrange(subject_common_plot, driver_plot, ncol = 2)
-
-#plot driver1_dist --> first driver ONLY
-driver1_plot <- ggplot(data = na.omit(all_data_deduplicate[, .N, by = .(driver_process1)]), aes(x = reorder(driver_process1, -N), y = N, fill = driver_process1)) + 
-  geom_bar(stat = "identity", color = "black") + 
-  theme_minimal() + xlab("driver_process1") +
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 24, face = "bold"),
-        axis.text = element_text(size = 22), legend.position = "right", 
-        axis.text.x = element_text(angle = 315),
-        legend.title = element_text(size = 22), legend.text = element_text(size = 22))
-driver1_plot
 
 #### driver by subject ####
 
