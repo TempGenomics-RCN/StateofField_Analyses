@@ -1,6 +1,6 @@
 ################################################### Script for Manuscript Figures #######################################################
 
-#explore trends in data for "State of Field" section
+#scripts for manuscript figures specifically
 #starts from cleaned & aggregated lit review data (created by "assemble_data_SoF.R" script)
 
 ##########################################################################################################################################
@@ -248,7 +248,7 @@ subject_plot
 #Using deduplicated since interested in driver(s) of publication -- don't want to inflate with multiple studies in a publication
 
 #fix missing driver in driver_process1 column
-all_data_deduplicate$driver_process1[all_data_deduplicate$driver_process1 == ""] <- "no_driver" #bc in this column, if not listed then does not have driver
+all_data_deduplicate$driver_process1[is.na(all_data_deduplicate$driver_process1)] <- "no_driver" #bc in this column, if not listed then does not have driver
 
 #sum # studies w/various drivers
 #one study can investigate more than one, hence driver 1, 2, 3, etc.
