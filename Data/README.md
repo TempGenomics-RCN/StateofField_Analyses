@@ -41,12 +41,12 @@ All files (except `Secondary_Filtered_Database.xlsx` contain the following infor
 30. **gen_time:** The generation time (in days) for the organism included in the study.
 31. **study_design:** Whether the study used museum/archived samples (opportunistic) or used samples that were all collected by the authors (predesigned).
 32. **type_change:** Whether the study looked at genomic change from natural or anthropogenic forces (or both).
-33. **driver_process:**The driver(s) of change analyzed in study. The most predominant driver was listed in driver_1, with all other drivers the study covered listed in subsequent columns (through column 35).
+33. **driver_process:** The driver(s) of change analyzed in study. The most predominant driver was listed in driver_1, with all other drivers the study covered listed in subsequent columns (through column 35).
 36. **length_process:** Whether the study looked at change from a driver that occured over acute time periods (0-10 generations) or chronic time periods (>10 generations).
 37. **data_type:** The type of genetic marker used in the study.
 38. **tissue_type:** The type of tissue(s) DNA was extracted from in the study.
 39. **preserv_method:** The type(s) of preservation methods used in the study.
 40. **extract_method:** The type(s) of extraction methods used in the study.
 41. **seq_platform:** The sequencing platform used in the study.
-42. **lib_prep_method:** THe library preparation method used in th study.
+42. **lib_prep_method:** The library preparation method used in th study.
 43. **notes:** Any notes made by the reviewer/recorder during the data collection process.
