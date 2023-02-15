@@ -13,7 +13,7 @@ Armenia,0,0
 Aruba,0,0
 Ascension Island,0,0
 Australia,7,5
-Austria,8,5
+Austria,7,5
 Azerbaijan,0,Displaced
 Azores,0,0
 Bahamas,0,0
@@ -38,7 +38,7 @@ Burkina Faso,0,0
 Burundi,0,0
 Cambodia,0,0
 Cameroon,0,0
-Canada,8,5
+Canada,7,5
 Canary Islands,0,0
 Cape Verde,0,0
 Cayman Islands,0,0
@@ -59,7 +59,7 @@ Curacao,0,0
 Cyprus,0,Displaced
 Czech Republic,2,2
 Democratic Republic of the Congo,0,0
-Denmark,6,5
+Denmark,7,5
 Djibouti,0,0
 Dominica,0,0
 Dominican Republic,0,0
@@ -81,7 +81,7 @@ French Southern and Antarctic Lands,0,0
 Gabon,0,0
 Gambia,0,0
 Georgia,0,Displaced
-Germany,5,5
+Germany,6,5
 Ghana,0,0
 Greece,2,2
 Greenland,3,2
@@ -98,8 +98,8 @@ Haiti,0,0
 Heard Island,0,0
 Honduras,0,0
 Hungary,1,1
-Iceland,0,0
-India,0,0
+Iceland,0,Displaced
+India,0,Displaced
 Indonesia,0,0
 Iran,0,Displaced
 Iraq,0,Displaced
@@ -164,7 +164,7 @@ Niue,0,0
 Norfolk Island,0,0
 North Korea,0,0
 Northern Mariana Islands,0,0
-Norway,0,0
+Norway,0,Displaced
 Oman,0,0
 Pakistan,0,Displaced
 Palau,0,0
@@ -205,7 +205,7 @@ Singapore,0,0
 Sint Eustatius,0,0
 Sint Maarten,0,0
 Slovakia,2,2
-Slovenia,0,0
+Slovenia,0,Displaced
 Solomon Islands,0,0
 Somalia,0,0
 South Africa,0,Displaced
@@ -240,7 +240,7 @@ Ukraine,1,1
 United Arab Emirates,0,0
 Uruguay,0,Displaced
 USA,50,50
-Uzbekistan,0,0
+Uzbekistan,0,Displaced
 Vanuatu,0,0
 Vatican,0,0
 Venezuela,0,Displaced
