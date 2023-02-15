@@ -650,13 +650,13 @@ author_museum_plot <- ggplot(data = author_museum_df, aes(x = reorder(Author, -N
   scale_fill_manual(values = c("#bebebe", "#332288")) + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 140),
-        axis.text = element_text(size = 140, color = "black"), legend.position = c(0.65, 0.83),
+        axis.text = element_text(size = 140, color = "black"), legend.position = "none",
         legend.title = element_blank(), legend.text = element_text(size = 120),
         legend.key.size = unit(6, "cm"), legend.box = "horizontal")
 author_museum_plot 
 
 #### predesigned samples #### 
-author_count_predesign <- c(0, 11, 72, 30, 12, 2)
+author_count_predesign <- c(2, 9, 72, 30, 12, 2)
 
 author_predesign_df <- as.data.frame(cbind(author_groups, country_group, author_count_predesign)) #merge together
   colnames(author_predesign_df) <- c("Author", "Country", "N")
@@ -666,18 +666,18 @@ author_predesign_df <- as.data.frame(cbind(author_groups, country_group, author_
 #4500 x 5000
 author_predesign_plot <- ggplot(data = author_predesign_df, aes(x = reorder(Author, -N), y = N, fill = Country)) + 
   geom_col() + labs(y = "Number of Studies") + 
-  geom_text(data = NULL, x = 0.75, y = 93, label = "B", size = 80) + 
+  geom_text(data = NULL, x = 0.75, y = 95, label = "B", size = 80) + 
   theme_minimal() + xlab("Author Affiliations From Sampled Countries") +
   scale_y_continuous(expand = expansion(mult = c(0, .1))) + #get bars to touch x-axis
   scale_fill_manual(values = c("#bebebe", "#332288")) + 
   theme(axis.ticks = element_line(color = "black", size = 1),
         axis.title = element_text(size = 140),
-        axis.text = element_text(size = 140, color = "black"), legend.position = "none",
+        axis.text = element_text(size = 140, color = "black"), legend.position = c(0.65, 0.83),
         legend.title = element_blank(), legend.text = element_text(size = 120),
         legend.key.size = unit(6, "cm"), legend.box = "horizontal")
 author_predesign_plot 
 
-FigS2_author_plot <- grid.arrange(author_museum_plot, author_predesign_plot, ncol = 1) #(4500 x 8000)
+FigS2_author_plot <- grid.arrange(author_museum_plot, author_predesign_plot, ncol = 2) #(8500 x 5000)
 
 #################################################################################################################################
 
