@@ -569,9 +569,119 @@ maxgen_by_driver_plot
 
 Fig5_maxtime_driv_plot <- grid.arrange(maxyear_by_driver_plot, maxgen_by_driver_plot, ncol = 1) #(7000 x 5000)
 
+##########################################################################################################################################
+
+######## Fig S1 - Driver by Taxa ########
+
+#count # driver occurrences by taxa
+driver1_by_taxa <- all_data_deduplicate[, .N, by = .(tax_group, driver_process1)]
+  colnames(driver1_by_taxa) <- c("tax_group", "driver_process", "N1")
+driver2_by_taxa <- all_data_deduplicate[, .N, by = .(tax_group, driver_process2)]
+  colnames(driver2_by_taxa) <- c("tax_group", "driver_process", "N2")
+driver3_by_taxa <- all_data_deduplicate[, .N, by = .(tax_group, driver_process3)]
+  colnames(driver3_by_taxa) <- c("tax_group", "driver_process", "N3")
+
+#merge driver_by_taxa data.tables
+driver_by_taxa_list <- list(driver1_by_taxa, driver2_by_taxa, driver3_by_taxa)
+  driver_by_taxa <- driver_by_taxa_list %>% reduce(full_join, by = c("tax_group", "driver_process"), all = TRUE)
+
+#sum across columns to get total N driver_by_taxa
+driver_by_taxa$Ntot <- rowSums(driver_by_taxa[, c("N1", "N2", "N3")], na.rm = TRUE)
+  driver_by_taxa <- driver_by_taxa[driver_by_taxa$N1 != "", ] #remove rows where driver_process missing (N2 & N3 only)
+    
+#build dataset where condensed classes to higher order taxa
+#Fish = Actinopterygii & Chondrichthyes, Mollusks = Bivalvia & Gastropoda, Crustaceans = Malacostraca, Branchiopoda & Hexanauplia, Tunicates = Ascidiacea, Annelids = Polychaeta
+tax_names <- c(rep("Amphibians", 3), rep("Annelids", 1), rep("Arachnids", 2), rep("Birds", 7), 
+               rep("Coral", 1), rep("Crustaceans", 4), rep("Fish", 6), rep("Insects", 6), 
+               rep("Mammals", 9), rep("Mollusks", 3), rep("Reptiles", 6), rep("Tunicates", 2))
+tax_drivers <- c("Env. Variation", "Nat. Disaster", "No Driver", "Env. Variation", "Climate Change", 
+                 "Env. Variation", "Climate Change", "Competition", "Disease", "Env. Variation", 
+                 "Habitat Loss", "Human Exploit.", "Invasive Species", "Climate Change", "Env. Variation",
+                 "Habitat Loss", "Invasive Species", "No Driver", "Climate Change", "Env. Variation", 
+                 "Habitat Loss", "Human Exploit.", "Invasive Species", "No Driver", "Disease", "Env. Variation", 
+                 "Habitat Loss", "Invasive Species", "Nat. Disaster", "No Driver", "Climate Change", "Competition", 
+                 "Disease", "Env. Variation", "Habitat Loss", "Human Exploit.", "Invasive Species", "Nat. Disaster", 
+                 "No Driver", "Env. Variation", "Human Exploit.", "No Driver", "Climate Change", "Env. Variation", 
+                 "Habitat Loss", "Human Exploit.", "Invasive Species", "No Driver", "Env. Variation", "Invasive Species")
+tax_driver_num <- c(1, 1, 2, 1, 1, 1, 3, 1, 5, 6, 28, 10, 11, 1, 3, 1, 2, 1, 7, 28, 9, 20, 8, 15, 2, 9, 4, 7, 1, 2, 
+                    3, 4, 5, 8, 28, 28, 5, 1, 5, 4, 2, 2, 1, 2, 1, 4, 3, 1, 2, 1)
+
+tax_driver_df <- as.data.frame(cbind(tax_names, tax_drivers, tax_driver_num)) #merge datasets together
+  colnames(tax_driver_df) <- c("Taxon", "Driver_Process", "N")
+  tax_driver_df$N <- as.numeric(as.character(tax_driver_df$N))
+
+## create driver by taxa figure ##
+#5000 x 4500
+driver_by_taxa_plot <- ggplot(data = tax_driver_df, aes(x = reorder(Taxon, -N), y = N, fill = Driver_Process)) + 
+  geom_col() + labs(y = "Count") + 
+  theme_minimal() + xlab("Taxon") + 
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) + #get bars to touch x-axis
+  theme(axis.ticks = element_line(color = "black", size = 1),
+        axis.title = element_text(size = 170),
+        axis.text = element_text(size = 120, color = "black"), legend.position = c(0.8, 0.6),
+        axis.text.x = element_text(angle = 90),
+        legend.title = element_blank(), legend.text = element_text(size = 100), 
+        legend.key.size = unit(6, "cm"))
+driver_by_taxa_plot 
+
 #################################################################################################################################
 
-######## Fig S1 - Time Points ########
+######## Fig S2 - Author Affiliation ########
+
+## build author databases ##
+
+author_groups <- c(rep("None", 2), rep("All", 2), rep(">1", 2))
+country_group <- c(rep(c("USA, Canada, & W. Europe", "All Other Countries"), 3))
+
+#### museum samples ####
+author_count_museum <- c(1, 5, 42, 24, 14, 5)
+
+author_museum_df <- as.data.frame(cbind(author_groups, country_group, author_count_museum)) #merge together
+  colnames(author_museum_df) <- c("Author", "Country", "N")
+  author_museum_df$N <- as.numeric(as.character(author_museum_df$N))
+
+## create author museum samples figure ##
+#4500 x 5000
+author_museum_plot <- ggplot(data = author_museum_df, aes(x = reorder(Author, -N), y = N, fill = Country)) + 
+  geom_col() + labs(y = "Number of Studies") + 
+  geom_text(data = NULL, x = 0.75, y = 61, label = "A", size = 80) + 
+  theme_minimal() + xlab("Author Affiliations From Sampled Countries") +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) + #get bars to touch x-axis
+  scale_fill_manual(values = c("#bebebe", "#332288")) + 
+  theme(axis.ticks = element_line(color = "black", size = 1),
+        axis.title = element_text(size = 140),
+        axis.text = element_text(size = 140, color = "black"), legend.position = c(0.65, 0.83),
+        legend.title = element_blank(), legend.text = element_text(size = 120),
+        legend.key.size = unit(6, "cm"), legend.box = "horizontal")
+author_museum_plot 
+
+#### predesigned samples #### 
+author_count_predesign <- c(0, 11, 72, 30, 12, 2)
+
+author_predesign_df <- as.data.frame(cbind(author_groups, country_group, author_count_predesign)) #merge together
+  colnames(author_predesign_df) <- c("Author", "Country", "N")
+  author_predesign_df$N <- as.numeric(as.character(author_predesign_df$N))
+
+## create author predesign samples figure ##
+#4500 x 5000
+author_predesign_plot <- ggplot(data = author_predesign_df, aes(x = reorder(Author, -N), y = N, fill = Country)) + 
+  geom_col() + labs(y = "Number of Studies") + 
+  geom_text(data = NULL, x = 0.75, y = 93, label = "B", size = 80) + 
+  theme_minimal() + xlab("Author Affiliations From Sampled Countries") +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) + #get bars to touch x-axis
+  scale_fill_manual(values = c("#bebebe", "#332288")) + 
+  theme(axis.ticks = element_line(color = "black", size = 1),
+        axis.title = element_text(size = 140),
+        axis.text = element_text(size = 140, color = "black"), legend.position = "none",
+        legend.title = element_blank(), legend.text = element_text(size = 120),
+        legend.key.size = unit(6, "cm"), legend.box = "horizontal")
+author_predesign_plot 
+
+FigS2_author_plot <- grid.arrange(author_museum_plot, author_predesign_plot, ncol = 1) #(4500 x 8000)
+
+#################################################################################################################################
+
+######## Fig S3 - Time Points ########
 
 #sum # studies w/various time points
 time_points <- c("2", "3", "4", "5", "6", "7", "8", "9", "10", "multiple")
@@ -623,7 +733,7 @@ time_points_plot
 
 ##########################################################################################################################################
 
-######## Fig S2 - Pre-designed Sample Distribution ########
+######## Fig S4 - Pre-designed Sample Distribution ########
 
 #create factor levels for mapping
 country_predesign$Samples <- as.character(country_predesign$Samples)
