@@ -276,11 +276,28 @@ nosd_check <- all_dt_accepted[study_design == ""] #0 rows without study_design, 
 sd_design <- sort(unique(all_dt_accepted$study_design)) #only 2 options, good
 
 #change pre-design to opportunistic when necessary
-all_dt_accepted$study_design[all_dt_accepted$Article_Number == "9420"] <- "opportunistic" #original samples not for genetic analysis
-all_dt_accepted$study_design[all_dt_accepted$Article_Number == "1966"] <- "opportunistic" #uses museum samples
-all_dt_accepted$study_design[all_dt_accepted$Article_Number == "10669"] <- "opportunistic" #uses museum samples
-all_dt_accepted$study_design[all_dt_accepted$Article_Number == "515"] <- "opportunistic" #uses museum samples
-all_dt_accepted$study_design[all_dt_accepted$Article_Number == "2745"] <- "opportunistic" #uses museum samples
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 9420] <- "opportunistic" #original samples not for genetic analysis
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 1966] <- "opportunistic" #uses museum samples
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 10669] <- "opportunistic" #uses museum samples
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 515] <- "opportunistic" #uses museum samples
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 2745] <- "opportunistic" #uses museum samples
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 8911] <- "opportunistic" #uses museum samples
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 3661] <- "opportunistic" #uses museum samples
+
+#change opportunistic to pre-design when necessary
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 6133] <- "pre-designed" #authors designed sampling regime
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 3325] <- "pre-designed" #authors designed sampling regime
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 3704] <- "pre-designed" #authors designed sampling regime
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 8966] <- "pre-designed" #part of long-term monitoring program
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 5441] <- "pre-designed" #authors designed sampling regime
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 1961] <- "pre-designed" #part of long-term monitoring program
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 4282] <- "pre-designed" #authors designed sampling regime
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 8869] <- "pre-designed" #part of long-term monitoring program
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 2418] <- "pre-designed" #part of long-term monitoring program
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 3735] <- "pre-designed" #part of long-term monitoring program
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 380] <- "pre-designed" #part of long-term monitoring program
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 8930] <- "pre-designed" #part of long-term monitoring program
+all_dt_accepted$study_design[all_dt_accepted$Article_Number == 3113] <- "pre-designed" #part of long-term monitoring program
 
 #### Check type change ####
 #check for studies without type change
