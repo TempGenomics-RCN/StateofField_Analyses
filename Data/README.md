@@ -16,8 +16,8 @@ All files (except `Secondary_Filtered_Database.xlsx` contain the following infor
 2. **Second_Filter_Flag:** A flag indicating the order in which the study was reviewed during title/abstract filtering. 'Review later' means the study was originally flagged as likely being outside of the scope of our study and was in the last set of articles to be filtered by hand.
 3. **Article_Title:** The title of the study.
 4. **Authors:** The authors of the study.
-5: **Abstract:** The abstract of the study.
-6: **Email_Addresses:** The email address(es) of the corresponding author of the study.
+5. **Abstract:** The abstract of the study.
+6. **Email_Addresses:** The email address(es) of the corresponding author of the study.
 7. **Publication_Year:** The year the study was published in.
 8. **DOI:** The DOI for the study.
 9. **Source_Title:** The title of the journal the study was published in.
