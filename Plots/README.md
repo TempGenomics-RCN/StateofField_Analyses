@@ -4,7 +4,6 @@ Other plots are as listed:
   * **driver_sd_plot.png:** Stacked, percentile bar plot showing the percentage of each study design category that is made up of studies looking at various drivers.
   * **driver_subject_plot.png:** Stacked, percentile bar plot showing the percentage of each subject category that is made up of studies looking at various drivers.
   * **driver_system_plot.png:** Stacked, percentile bar plot showing the percentage of each system category that is made up of studies looking at various drivers.
-  * **driver_taxa_plot.png:** Stacked, percentile bar plot showing the percentage of each taxa category that is made up of studies looking at various drivers.
   * **driver_year_plot.png:** Line plot showing temporal publication trends in drivers.
   * **gentime_taxa_plot.png:** Box-and-whiskers plot showing how generation time varies by taxa.
   * **libprep_subject_plot.png:** Stacked, percentile bar plot showing the percentage of each subject category that is made up of studies using various library prep methods.
