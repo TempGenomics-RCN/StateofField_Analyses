@@ -1,4 +1,4 @@
-# SoF_Analyses
+# StateofField_Analyses
 
 This repository provides the data, scripts, and figures for the analyses in "The practice and promise of temporal genomics for measuring evolutionary responses to global change," which reviews the state of the field of temporal genomics through 2022 and identifies best practices and common pitfalls to consider when designing such studies.
 
