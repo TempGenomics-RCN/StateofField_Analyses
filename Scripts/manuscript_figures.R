@@ -571,7 +571,64 @@ Fig5_maxtime_driv_plot <- grid.arrange(maxyear_by_driver_plot, maxgen_by_driver_
 
 ##########################################################################################################################################
 
-######## Fig S1 - Driver by Taxa ########
+######## Fig S1 - Author Affiliation ########
+
+## build author databases ##
+
+author_groups <- c(rep("None", 3), rep("All", 3), rep(">1", 3))
+country_group <- c(rep(c("Australia", "New Zealand", "All other countries"), 3))
+
+#### museum samples ####
+author_count_museum <- c(0, 0, 13, 3, 6, 15, 0, 0, 5)
+
+author_museum_df <- as.data.frame(cbind(author_groups, country_group, author_count_museum)) #merge together
+  colnames(author_museum_df) <- c("Author", "Country", "N")
+  author_museum_df$N <- as.numeric(as.character(author_museum_df$N))
+  author_museum_df$Author <- factor(author_museum_df$Author, levels = c("All", ">1", "None"))
+
+## create author museum samples figure ##
+#4500 x 5000
+author_museum_plot <- ggplot(data = author_museum_df, aes(x = Author, y = N, fill = Country)) + 
+  geom_col() + labs(y = "Number of Studies") + 
+  geom_text(data = NULL, x = 0.75, y = 61, label = "A", size = 80) + 
+  theme_minimal() + xlab("Author Affiliations From Sampled Countries") +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) + #get bars to touch x-axis
+  scale_fill_manual(values = c("#d6d2e7", "#847ab7", "#332288")) + 
+  theme(axis.ticks = element_line(color = "black", size = 1),
+        axis.title = element_text(size = 140),
+        axis.text = element_text(size = 140, color = "black"), legend.position = "none",
+        legend.title = element_blank(), legend.text = element_text(size = 120),
+        legend.key.size = unit(6, "cm"), legend.box = "horizontal")
+author_museum_plot 
+
+#### predesigned samples #### 
+author_count_predesign <- c(0, 0, 12, 11, 0, 19, 0, 0, 2)
+
+author_predesign_df <- as.data.frame(cbind(author_groups, country_group, author_count_predesign)) #merge together
+  colnames(author_predesign_df) <- c("Author", "Country", "N")
+  author_predesign_df$N <- as.numeric(as.character(author_predesign_df$N))
+  author_predesign_df$Author <- factor(author_predesign_df$Author, levels = c("All", ">1", "None"))
+
+## create author predesign samples figure ##
+#4500 x 5000
+author_predesign_plot <- ggplot(data = author_predesign_df, aes(x = Author, y = N, fill = Country)) + 
+  geom_col() + labs(y = "Number of Studies") + 
+  geom_text(data = NULL, x = 0.75, y = 95, label = "B", size = 80) + 
+  theme_minimal() + xlab("Author Affiliations From Sampled Countries") +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) + #get bars to touch x-axis
+  scale_fill_manual(values = c("#d6d2e7", "#847ab7", "#332288")) + 
+  theme(axis.ticks = element_line(color = "black", size = 1),
+        axis.title = element_text(size = 140),
+        axis.text = element_text(size = 140, color = "black"), legend.position = c(0.65, 0.83),
+        legend.title = element_blank(), legend.text = element_text(size = 120),
+        legend.key.size = unit(6, "cm"), legend.box = "horizontal")
+author_predesign_plot 
+
+FigS1_author_plot <- grid.arrange(author_museum_plot, author_predesign_plot, ncol = 2) #(8500 x 5000)
+
+#################################################################################################################################
+
+######## Fig S2 - Driver by Taxa ########
 
 #count # driver occurrences by taxa
 driver1_by_taxa <- all_data_deduplicate[, .N, by = .(tax_group, driver_process1)]
@@ -623,61 +680,6 @@ driver_by_taxa_plot <- ggplot(data = tax_driver_df, aes(x = reorder(Taxon, -N), 
         legend.title = element_blank(), legend.text = element_text(size = 100), 
         legend.key.size = unit(6, "cm"))
 driver_by_taxa_plot 
-
-#################################################################################################################################
-
-######## Fig S2 - Author Affiliation ########
-
-## build author databases ##
-
-author_groups <- c(rep("None", 2), rep("All", 2), rep(">1", 2))
-country_group <- c(rep(c("USA, Canada, & W. Europe", "All Other Countries"), 3))
-
-#### museum samples ####
-author_count_museum <- c(1, 5, 42, 24, 14, 5)
-
-author_museum_df <- as.data.frame(cbind(author_groups, country_group, author_count_museum)) #merge together
-  colnames(author_museum_df) <- c("Author", "Country", "N")
-  author_museum_df$N <- as.numeric(as.character(author_museum_df$N))
-
-## create author museum samples figure ##
-#4500 x 5000
-author_museum_plot <- ggplot(data = author_museum_df, aes(x = reorder(Author, -N), y = N, fill = Country)) + 
-  geom_col() + labs(y = "Number of Studies") + 
-  geom_text(data = NULL, x = 0.75, y = 61, label = "A", size = 80) + 
-  theme_minimal() + xlab("Author Affiliations From Sampled Countries") +
-  scale_y_continuous(expand = expansion(mult = c(0, .1))) + #get bars to touch x-axis
-  scale_fill_manual(values = c("#bebebe", "#332288")) + 
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 140),
-        axis.text = element_text(size = 140, color = "black"), legend.position = "none",
-        legend.title = element_blank(), legend.text = element_text(size = 120),
-        legend.key.size = unit(6, "cm"), legend.box = "horizontal")
-author_museum_plot 
-
-#### predesigned samples #### 
-author_count_predesign <- c(2, 9, 72, 30, 12, 2)
-
-author_predesign_df <- as.data.frame(cbind(author_groups, country_group, author_count_predesign)) #merge together
-  colnames(author_predesign_df) <- c("Author", "Country", "N")
-  author_predesign_df$N <- as.numeric(as.character(author_predesign_df$N))
-
-## create author predesign samples figure ##
-#4500 x 5000
-author_predesign_plot <- ggplot(data = author_predesign_df, aes(x = reorder(Author, -N), y = N, fill = Country)) + 
-  geom_col() + labs(y = "Number of Studies") + 
-  geom_text(data = NULL, x = 0.75, y = 95, label = "B", size = 80) + 
-  theme_minimal() + xlab("Author Affiliations From Sampled Countries") +
-  scale_y_continuous(expand = expansion(mult = c(0, .1))) + #get bars to touch x-axis
-  scale_fill_manual(values = c("#bebebe", "#332288")) + 
-  theme(axis.ticks = element_line(color = "black", size = 1),
-        axis.title = element_text(size = 140),
-        axis.text = element_text(size = 140, color = "black"), legend.position = c(0.65, 0.83),
-        legend.title = element_blank(), legend.text = element_text(size = 120),
-        legend.key.size = unit(6, "cm"), legend.box = "horizontal")
-author_predesign_plot 
-
-FigS2_author_plot <- grid.arrange(author_museum_plot, author_predesign_plot, ncol = 2) #(8500 x 5000)
 
 #################################################################################################################################
 
