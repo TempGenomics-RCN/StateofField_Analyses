@@ -18,3 +18,4 @@ Output/temporal_sampling_regime.xlsx
 #temp files to ignore
 ~*.docx
 ~*.tmp
+~$*
