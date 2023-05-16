@@ -12,6 +12,6 @@ This repository is organized into 5 directories:
 4. **Plots:** Contains pngs of plots included in the manuscript, as well as aadditional plots for data exploration purposes.
 5. **Scripts:** Contains R scripts and code for data cleaning and plots.
 
-Please contact René at rene.clark[at]rutgers.edu with any questions.
+Please contact René at rclark848[at]gmail.com with any questions.
 
 *Also available to download as a zip archive from DRYAD: https://doi.org/10.5061/dryad.mkkwh714n*.
