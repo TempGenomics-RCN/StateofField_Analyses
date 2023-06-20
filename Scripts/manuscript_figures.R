@@ -11,13 +11,13 @@ remove(list = ls())
 getwd() #check working directory
 
 #load libraries
-library(here)
-library(data.table)
-library(tidyverse)
-library(ggpattern)
-library(gridExtra)
+library(here) #v.1.0.1
+library(data.table) #v.1.14.8
+library(tidyverse) #v.2.0.0
+library(ggpattern) #
+library(gridExtra) #v.2.3
 library(cowplot)
-library(ggthemes)
+library(ggthemes) #v.4.2.4
 
 #read in data
 all_data <- fread(here("Output", "all_tempgen_data.csv"))
