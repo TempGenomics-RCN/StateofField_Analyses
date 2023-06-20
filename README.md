@@ -20,9 +20,9 @@ _______________________________________________________
 2. RStudio (v.2022.12.0 or above)
 
 **Necessary R Packages**
-1. cowplot 
+1. cowplot (v.1.1.1)
 2. data.table (v.1.14.8)
-3. ggpattern (v.
+3. ggpattern (v.1.0.1)
 4. ggthemes (v.4.2.4)
 5. gridExtra (v.2.3)
 6. here (v.1.0.1)
