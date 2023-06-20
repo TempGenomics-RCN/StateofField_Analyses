@@ -11,7 +11,7 @@ remove(list = ls())
 getwd() #check working directory
 
 #load libraries
-library(data.table)
+library(data.table) #v.1.14.8
 
 #read in data
 adaptation_dt <- fread("Data/adaptation_accepted.csv")
