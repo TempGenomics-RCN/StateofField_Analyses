@@ -12,11 +12,11 @@ remove(list = ls())
 getwd() #check working directory
 
 #load libraries
-library(here)
-library(data.table)
-library(tidyverse)
+library(here) #v.1.0.1
+library(data.table) #v.1.14.8
+library(tidyverse) #v.2.0.0
 library(ggpattern)
-library(gridExtra)
+library(gridExtra) #v.2.3
 library(cowplot)
 
 #read in data
