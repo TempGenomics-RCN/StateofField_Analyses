@@ -13,3 +13,17 @@ This repository is organized into 5 directories:
 Please contact René at rclark848[at]gmail.com with any questions.
 
 *Also available to download as a zip archive from DRYAD: https://doi.org/10.5061/dryad.mkkwh714n*.
+_______________________________________________________
+
+**Necessary Software**
+1. R (v.4.2.2 or above)
+2. RStudio (v.2022.12.0 or above)
+
+**Necessary R Packages**
+1. cowplot 
+2. data.table (v.1.14.8)
+3. ggpattern (v.
+4. ggthemes (v.4.2.4)
+5. gridExtra (v.2.3)
+6. here (v.1.0.1)
+7. tidyverse (v.2.0.0)
