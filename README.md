@@ -1,6 +1,6 @@
 This repository provides the data, scripts, and figures for the analyses in "The practice and promise of temporal genomics for measuring evolutionary responses to global change," which reviews the state of the field of temporal genomics through 2022 and identifies best practices and common pitfalls to consider when designing such studies.
 
-**Citation:** Clark RD, Catalano KA, Fitz KS, Garcia E, Jaynes KE, Reid BN, Sawkins A, Snead AA, Whalen JC, Pinsky ML. (2023) The practice and promise of temporal genomics for measuring evolutionary responses to global change. *Molecular Ecology Resources*. (https://doi.org/10.1111/1755-0998.13789) *in print*
+**Citation:** Clark RD, Catalano KA, Fitz KS, Garcia E, Jaynes KE, Reid BN, Sawkins A, Snead AA, Whalen JC, Pinsky ML. (2025) The practice and promise of temporal genomics for measuring evolutionary responses to global change. *Molecular Ecology Resources*, **25**(5):e13789. [DOI:10.1111/1755-0998.13789](https://doi.org/10.1111/1755-0998.13789)
 
 This repository is organized into 5 directories:
 
